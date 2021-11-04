@@ -1,0 +1,9 @@
+*.txt
+*.dat
+*.pkl
+*.pickle
+*.fasta
+*.fa
+*.FASTA
+PF*
+*.pdf
