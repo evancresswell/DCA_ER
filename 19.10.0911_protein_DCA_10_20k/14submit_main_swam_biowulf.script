@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm *.dat
+rm *.pyc
+
+swarm -f swarmfile.txt -t 4 -g 200.0 --time=1-00:00:00 --partition norm  #  quick # norm
