@@ -45,7 +45,7 @@ def remove_bad_seqs(s,tpdb,fgs=0.3):
     seq_index = np.arange(s.shape[0])
     seq_index = np.delete(seq_index,bad_seq)
     new_tpdb = np.where(seq_index==tpdb)
-    print("tpdb is now ",new_tpdb[0][0])
+    print("After removing bad sequences, tpdb is now ",new_tpdb[0][0])
     
     return new_s, new_tpdb[0][0]
 
@@ -317,17 +317,14 @@ def delete_sorted_DI_duplicates(sorted_DI):
 #pfam_id = 'PF00186'
 #ipdb=0
 def load_msa(data_path,pfam_id):
-    printing = True
     s = np.load('%s/%s/msa.npy'%(data_path,pfam_id)).T
-    if printing:
-    	print("shape of s (import from msa.npy):\n",s.shape)
+    # print("shape of s (import from msa.npy):\n",s.shape)
    
     # convert bytes to str
     try:
         s = np.array([s[t,i].decode('UTF-8') for t in range(s.shape[0]) \
              for i in range(s.shape[1])]).reshape(s.shape[0],s.shape[1])
-        if printing:
-    	    print("shape of s (after UTF-8 decode):\n",s.shape)
+    	# print("shape of s (after UTF-8 decode):\n",s.shape)
     except:
         print("\n\nUTF not decoded, pfam_id: %s \n\n"%pfam_id,s.shape)
         print("Exception: ",sys.exc_info()[0])
@@ -344,7 +341,7 @@ def load_msa(data_path,pfam_id):
     return s
 
     #def data_processing(data_path,pfam_id,ipdb=0,gap_seqs=0.2,gap_cols=0.2,prob_low=0.004):
-def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, conserved_cols=0.8,printing=True):
+def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, conserved_cols=0.8,printing=True, out_dir='./'):
     
     # read parse_pfam data:
     #print('read original aligned pfam data')
@@ -354,15 +351,13 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     #print('select only column presenting as uppercase at PDB sequence')
     #pdb = np.load('../%s/pdb_refs.npy'%pfam_id)
     pdb = np.load('%s/%s/pdb_refs.npy'%(data_path,pfam_id))
-    if printing:
-    	print("pdb:\n",pdb)
     #ipdb = 0
 
     # convert bytes to str (python 2 to python 3)
     pdb = np.array([pdb[t,i].decode('UTF-8') for t in range(pdb.shape[0]) \
          for i in range(pdb.shape[1])]).reshape(pdb.shape[0],pdb.shape[1])
     if printing:
-    	print("pdb (after UTF-8 decode, removing 'b'):\n",pdb)
+    	print("pdb ref example (pdb[0])  (after UTF-8 decode, removing 'b'):\n",pdb[0])
 
     tpdb = int(pdb[ipdb,1])
     print('tpdb (s_ipdb) is : ',tpdb)
@@ -376,7 +371,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     gap_pdb = s[tpdb] =='-' # returns True/False for gaps/no gaps
     #print("removing gaps...")
     s = s[:,~gap_pdb] # removes gaps  
-    print(s.shape)
+    # print('shape of s without reference sequence gaps: ', s.shape)
     s_index = np.arange(s.shape[1])
 
     if printing:
@@ -389,7 +384,8 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
   
 
     lower_cols = np.array([i for i in range(s.shape[1]) if s[tpdb,i].islower()])
-    print("removing non aligned (lower case) columns in subject sequence:\n ",lower_cols,'\n')
+    if printing:
+        print("removing non aligned (lower case) columns in subject sequence:\n ",lower_cols,'\n')
     #lower case removal reference: https://onlinelibrary.wiley.com/doi/full/10.1002/1097-0134%2820001101%2941%3A2%3C224%3A%3AAID-PROT70%3E3.0.CO%3B2-Z 
 
 
@@ -483,7 +479,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
 
     #mi = number_residues(s)
     #print(mi.mean())
-    np.save("%s_removed_cols.npy"%pfam_id,removed_cols)
+    np.save("%s/%s_removed_cols.npy" % (out_dir, pfam_id),removed_cols)
 
     return s,removed_cols,s_index, tpdb
 #=========================================================================================
@@ -675,7 +671,7 @@ def generate_pfam_data(data_path,pfam_id,ipdb):
                                          'pdb_id','chain','pdb_start','pdb_end'])
         print(df.head())
 
-        print('seq:',int(pdb[ipdb,1]))
+        # print('seq:',int(pdb[ipdb,1]))
         
         #try:
         # data processing

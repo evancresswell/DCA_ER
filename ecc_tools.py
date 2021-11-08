@@ -170,150 +170,94 @@ def gen_DI_matrix(DI):
     return di
 
 
-def contact_map(pdb,ipdb,cols_removed,s_index,use_old=False,ref_seq = None):
-    print('Updating contact map to use pdb-refs pdb_start and pdb_end when getting pp sequence coordinates.')
-    print('#---------------------------------------------------#\nGenerating Contact Map\n#--------------------------------------------------#\n')
-    print(pdb[ipdb,:])
+def contact_map(pdb,ipdb,cols_removed,s_index,ref_seq = None, printing=True, pdb_out_dir='./'):
+    if printing:
+        print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
+        print(pdb[ipdb,:])
     pdb_id = pdb[ipdb,5]
     pdb_chain = pdb[ipdb,6]
-    pdb_start,pdb_end = int(pdb[ipdb,7]),int(pdb[ipdb,8])
+    pdb_start,pdb_end = int(pdb[ipdb,7])-1,int(pdb[ipdb,8])-1 # -1 due to array-indexing
     #print('pdb id, chain, start, end, length:',pdb_id,pdb_chain,pdb_start,pdb_end,pdb_end-pdb_start+1)
 
     #print('download pdb file')
-    pdb_file = pdb_list.retrieve_pdb_file(str(pdb_id),file_format='pdb')
+    pdb_file = pdb_list.retrieve_pdb_file(str(pdb_id),file_format='pdb', pdir=pdb_out_dir)
     #pdb_file = pdb_list.retrieve_pdb_file(pdb_id)
-    #---------------------------------------------------------------------------------------------------------------------#
+
+    #-------------------------------------------------------------------------------------------------#
     chain = pdb_parser.get_structure(str(pdb_id),pdb_file)[0][pdb_chain]
-    if use_old:
-        coords_all = np.array([a.get_coord() for a in chain.get_atoms()])
-        #---PROOF THAT THE ABOVE METHOD IS WRONG.. IT ITERATES THROUGH ATOMS! NOT RESIDUES OR PARTICULAR ATOMS IN RESIDUES----#
-        #for a in chain.get_atoms():
-        #    print(a.get_name())
-        print(len(coords_all))
-        coords = coords_all[pdb_start-1:pdb_end]
-    else:
-        good_coords = []
-        coords_all = np.array([a.get_coord() for a in chain.get_atoms()])
-        ca_residues = np.array([a.get_name()=='CA' for a in chain.get_atoms()])
-        ca_coords = coords_all[ca_residues]
-        good_coords = ca_coords[pdb_start-1:pdb_end]
-        n_amino = len(good_coords)
-        # Correct Method
-        ppb = PPBuilder().build_peptides(chain)
-        #    print(pp.get_sequence())
+    good_coords = []
+	
+    coords_all = np.array([a.get_coord() for a in chain.get_atoms()])
+    ca_residues = np.array([a.get_name()=='CA' for a in chain.get_atoms()])
+    ca_coords = coords_all[ca_residues]
+    in_range_ca_coords = ca_coords[pdb_start-1:pdb_end]
+    n_amino = len(in_range_ca_coords)
+
+    ppb = PPBuilder().build_peptides(chain)
+    #    print(pp.get_sequence())
+    if printing:
         print('peptide build of chain produced %d elements'%(len(ppb)))
 
-        if 0:    # breaks up ppb fragments into different poly_seqs
-            for i,pp in enumerate(ppb):
-                poly_seq = [char for char in str(pp.get_sequence())]
+    # Get full list of CA coords from poly_seq
+    poly_seq = list()
+    pp_ca_coords_full = list()
+    for i,pp in enumerate(ppb):
+        for char in str(pp.get_sequence()):
+            poly_seq.append(char)                                     
+        poly_seq_ca_atoms = pp.get_ca_list()
+        pp_ca_coords_full.extend( [a.get_coord() for a in poly_seq_ca_atoms])
+    
+    
+    n_amino_full = len(pp_ca_coords_full)
+    if printing:
+        print('original poly_seq: \n', poly_seq,'\n length: ',len(poly_seq))
+        print('Polypeptide Ca Coord list: ',len(pp_ca_coords_full),'\n length: ',len(pp_ca_coords_full))
+  
+    # Extract coordinates and sequence char in PDB-range 
+    pp_ca_coords_full_range = pp_ca_coords_full[pdb_start-1:pdb_end]
+    poly_seq_range = poly_seq[pdb_start-1:pdb_end]
+    if printing:
+        print('\n\nExtracting pdb-range from full list of polypeptide coordinates') 
+        print('PDB-range poly_seq: \n', poly_seq_range,'\n length: ',len(poly_seq_range))
+        print('PDB-range Polypeptide Ca Coord list: ',len(pp_ca_coords_full_range),'\n length: ',len(pp_ca_coords_full_range))
+        print('\n\n') 
 
-                print('original poly_seq: \n', poly_seq,'\n length: ',len(poly_seq))
-                poly_seq = np.delete(poly_seq,cols_removed)
-                print('poly_seq[~cols_removed]: \n', poly_seq,'\n length: ',len(poly_seq))
+    # Get curated polypeptide sequence (using cols_removed) & Get coords of curated pp seq
+    poly_seq_curated = np.delete(poly_seq_range, cols_removed)
+    pp_ca_coords_curated = np.delete(pp_ca_coords_full[pdb_start-1:pdb_end],cols_removed,axis=0)
 
-                poly_seq_ca_atoms = pp.get_ca_list()
-                print('Polypeptide Ca Coord list: ',len(poly_seq_ca_atoms))
-                pp_ca_coords = [a.get_coord() for a in poly_seq_ca_atoms]
-                if 0:
-                    for index,ca_coord in enumerate(pp_ca_coords):
-                        print(ca_coord,' and ',ca_coords[index])
-
-                if len(poly_seq) < len(s_index):
-                    print('ppb structure not big enough\nmust be at least length ',cols_removed[-1])
-                    continue
-
-                if ref_seq is not None:
-                    bad_seq = False
-                    # check polypeptide sequence against reference sequence
-                    if len(poly_seq) == len(ref_seq):
-                        for indx,a in enumerate(poly_seq):
-                            if a != ref_seq[indx]:
-                                print("\n Polypeptide Sequence does not match at index %d (%s != %s)"%(indx,a,ref_seq[indx]))
-                                bad_seq=True
-                                break
-                    if bad_seq:
-                        continue
-                    else:
-                        continue
-
-                print('\n\nPolypeptide Sequence Matched Reference Sequence !!!\n\n')
-                print('poly_seq[~cols_removed]: \n', poly_seq,'\n length: ',len(poly_seq))
-        	   
-                break
-        else: # combines ppb fragments into poly_seq
-            # Get full list of CA coords from poly_seq
-            poly_seq = list()
-            pp_ca_coords_full = list()
-            for i,pp in enumerate(ppb):
-                for char in str(pp.get_sequence()):
-                    poly_seq.append(char)                                     
-                poly_seq_ca_atoms = pp.get_ca_list()
-                pp_ca_coords_full.extend( [a.get_coord() for a in poly_seq_ca_atoms])
-            
-            
-            n_amino_full = len(pp_ca_coords_full)
-            print('original poly_seq: \n', poly_seq,'\n length: ',len(poly_seq))
-            print('Polypeptide Ca Coord list: ',len(pp_ca_coords_full),'\n length: ',len(pp_ca_coords_full))
-          
-            # Extract coordinates and sequence char in PDB-range 
-            print('\n\nExtracting pdb-range from full list of polypeptide coordinates') 
-            pp_ca_coords_full_range = pp_ca_coords_full[pdb_start:pdb_end]
-            poly_seq_range = poly_seq[pdb_start:pdb_end]
-            print('PDB-range poly_seq: \n', poly_seq_range,'\n length: ',len(poly_seq_range))
-            print('PDB-range Polypeptide Ca Coord list: ',len(pp_ca_coords_full_range),'\n length: ',len(pp_ca_coords_full_range))
-            print('\n\n') 
-
-            # Get curated polypeptide sequence (using cols_removed) & Get coords of curated pp seq
-            # THIS IS THE VERSION BEING USED -- 10/20/2020
-            poly_seq_curated = np.delete(poly_seq,cols_removed)
-            poly_seq_range_curated = np.delete(poly_seq_range[pdb_start:pdb_end],cols_removed)
-            print('poly_seq[~cols_removed] (poly_seq_curated): \n', poly_seq_curated,'\n length: ',len(poly_seq_curated))
-            print('poly_seq_range[~cols_removed] (poly_seq_range_curated): \n', poly_seq_curated,'\n length: ',len(poly_seq_curated))
-            pp_ca_coords_curated = np.delete(pp_ca_coords_full[pdb_start:pdb_end],cols_removed,axis=0)
-            print('Curated Polypeptide Ca Coord list: ',len(pp_ca_coords_curated),'\n length: ',len(pp_ca_coords_curated))
-
-
+    if printing:
+        print('Sequence inside given PDB range (poly_seq_range) with columns removed: (poly_seq_range_curated): \n', poly_seq_curated,'\n length: ',len(poly_seq_curated))
+        print('Curated Polypeptide Ca Coord list: ',len(pp_ca_coords_curated),'\n length: ',len(pp_ca_coords_curated))
         print('\n\ns_index len: ',len(s_index))
-        print('s_index largest index: ',s_index[-1])
-        print('cols_removed largest index: ',max(cols_removed))
-
         print("\n\n#---------#\nNumber of good amino acid coords: %d should be same as sum of s_index and cols_removed"%n_amino)
         print("s_index and col removed len %d "%(len(s_index)+len(cols_removed)))
-        print('all coords %d, all ca coords: %d , protein rangs ca coords len: %d, pp ca coords: %d pp ca curated coords len: %d\n#----------#\n\n' % (len(coords_all),len(ca_coords),len(good_coords),len(pp_ca_coords_full),len(pp_ca_coords_curated)))
-        #for i,a in enumerate(chain.get_atoms()):
-        #    if a.get_name() == 'CA':
-        #        good_coords.append(a.get_coord())		
+        print('all coords %d\nall ca coords: %d\nprotein rangs ca coords len: %d\npp ca coords: %d\npp ca curated coords len: %d\n#----------#\n\n' % (len(coords_all),len(ca_coords),len(in_range_ca_coords),len(pp_ca_coords_full),len(pp_ca_coords_curated)))
 
-        ct_full = distance_matrix(good_coords,good_coords)
-        ct_full = distance_matrix(pp_ca_coords_full,pp_ca_coords_full)
-        """
-        for i,ca in enumerate(ppb[0].get_ca_list()):		
-           #print(ca.get_coord())
-           #coords_zhang.append(a.get_coord())
-           good_coords.append(ca.get_coord())
-        """
-        coords = np.array(good_coords)
-    #---------------------------------------------------------------------------------------------------------------------#
+    ct_full = distance_matrix(in_range_ca_coords,in_range_ca_coords)
+    ct_full = distance_matrix(pp_ca_coords_full,pp_ca_coords_full)
+    coords = np.array(in_range_ca_coords)
+
+    #-------------------------------------------------------------------------------------------------#
     coords_remain = np.delete(coords,cols_removed,axis=0)
-    print(coords_remain.shape)
     #print(coords_remain.shape)
     
 
     ct = distance_matrix(coords_remain,coords_remain)
     ct = distance_matrix(pp_ca_coords_curated,pp_ca_coords_curated)
-    print('\n#---------------------------------------------------#\nContact Map Generated \n#--------------------------------------------------#\n')
-    if use_old:
-        return ct
-    else:
-        return ct,ct_full,n_amino_full,poly_seq
+    if printing:
+        print(coords_remain.shape)
+        print('\n\n#-----------------------#\nContact Map Generated \n#----------------------------#\n')
+
+    return ct,ct_full,n_amino_full,poly_seq_curated
 
 def roc_curve(ct,di,ct_thres):
     """
-	ct: n x n matrix of True/False for contact
+    ct: n x n matrix of True/False for contact
 
-	di: n x n matrix of coupling info where n is number of positions with contact predictions
+    di: n x n matrix of coupling info where n is number of positions with contact predictions
 
-	ct_trhes:  distance for contact threshold
+    ct_trhes:  distance for contact threshold
     """
     ct1 = ct.copy()
     
@@ -370,113 +314,113 @@ def roc_curve(ct,di,ct_thres):
 
 on_pc = True
 if on_pc:
-	from IPython.display import HTML
-	def hide_toggle(for_next=False):
-	    this_cell = """$('div.cell.code_cell.rendered.selected')"""
-	    next_cell = this_cell + '.next()'
+    from IPython.display import HTML
+    def hide_toggle(for_next=False):
+        this_cell = """$('div.cell.code_cell.rendered.selected')"""
+        next_cell = this_cell + '.next()'
 
-	    toggle_text = 'Toggle show/hide'  # text shown on toggle link
-	    target_cell = this_cell  # target cell to control with toggle
-	    js_hide_current = ''  # bit of JS to permanently hide code in current cell (only when toggling next cell)
+        toggle_text = 'Toggle show/hide'  # text shown on toggle link
+        target_cell = this_cell  # target cell to control with toggle
+        js_hide_current = ''  # bit of JS to permanently hide code in current cell (only when toggling next cell)
 
-	    if for_next:
-	        target_cell = next_cell
-	        toggle_text += ' next cell'
-	        js_hide_current = this_cell + '.find("div.input").hide();'
+        if for_next:
+            target_cell = next_cell
+            toggle_text += ' next cell'
+            js_hide_current = this_cell + '.find("div.input").hide();'
 
-	    js_f_name = 'code_toggle_{}'.format(str(random.randint(1,2**64)))
+        js_f_name = 'code_toggle_{}'.format(str(random.randint(1,2**64)))
 
-	    html = """
-		<script>
-		    function {f_name}() {{
-			{cell_selector}.find('div.input').toggle();
-		    }}
+        html = """
+        <script>
+            function {f_name}() {{
+            {cell_selector}.find('div.input').toggle();
+            }}
 
-		    {js_hide_current}
-		</script>
+            {js_hide_current}
+        </script>
 
-		<a href="javascript:{f_name}()">{toggle_text}</a>
-	    """.format(
-		f_name=js_f_name,
-		cell_selector=target_cell,
-		js_hide_current=js_hide_current, 
-		toggle_text=toggle_text
-	    )
+        <a href="javascript:{f_name}()">{toggle_text}</a>
+        """.format(
+        f_name=js_f_name,
+        cell_selector=target_cell,
+        js_hide_current=js_hide_current, 
+        toggle_text=toggle_text
+        )
 
-	    return HTML(html)
+        return HTML(html)
 
 #=========================================================================================
 def distance_restr_sortedDI(sorted_DI_in, s_index=None):
         # if s_index is passes the resulting tuple list will be properly indexed
-	sorted_DI = sorted_DI_in.copy()
-	count = 0
-	for site_pair, score in sorted_DI_in:
+    sorted_DI = sorted_DI_in.copy()
+    count = 0
+    for site_pair, score in sorted_DI_in:
 
-		# if s_index exists re-index sorted pair
-		if s_index is not None:
-			pos_0 = s_index[site_pair[0]]
-			pos_1 = s_index[site_pair[1]]
-		else:
-			pos_0 = site_pair[0]
-			pos_1 = site_pair[1]
-			print('MAKE SURE YOUR INDEXING IS CORRECT!!')
-			print('		 or pass s_index to distance_restr_sortedDI()')
+        # if s_index exists re-index sorted pair
+        if s_index is not None:
+            pos_0 = s_index[site_pair[0]]
+            pos_1 = s_index[site_pair[1]]
+        else:
+            pos_0 = site_pair[0]
+            pos_1 = site_pair[1]
+            print('MAKE SURE YOUR INDEXING IS CORRECT!!')
+            print('         or pass s_index to distance_restr_sortedDI()')
 
-		if abs(pos_0- pos_1)<5:
-			sorted_DI[count] = (pos_0,pos_1),0
-		else:
-			sorted_DI[count] = (pos_0,pos_1),score
-		count += 1
-	sorted_DI.sort(key=lambda x:x[1],reverse=True)  
-	return sorted_DI
+        if abs(pos_0- pos_1)<5:
+            sorted_DI[count] = (pos_0,pos_1),0
+        else:
+            sorted_DI[count] = (pos_0,pos_1),score
+        count += 1
+    sorted_DI.sort(key=lambda x:x[1],reverse=True)  
+    return sorted_DI
 #=========================================================================================
 def distance_restr(di,s_index,make_large=False):
-	# Hamstring DI matrix by setting all DI values st |i-j|<5 to 0
-	if di.shape[0] != s_index.shape[0]:
-		print("Distance restraint cannot be imposed, bad input")
-		#IndexError: index 0 is out of bounds for axis 0 with size 0
-		print("s_index: ",s_index.shape[0],"di shape: ",di.shape[0])
-		#print('di:\n',di[0])
-		raise IndexError("matrix input dimensions do not matchup with simulation n_var")
-	di_distal = np.zeros(di.shape)
-	for i in range(di.shape[0]):
-		for j in range(di.shape[1]):
-			if(abs(s_index[i]-s_index[j])<5):
-				if make_large:
-					di_distal[i][j]=35.
-				else:	
-					di_distal[i][j]=0.
-			else:
-				di_distal[i][j] = di[i][j]
+    # Hamstring DI matrix by setting all DI values st |i-j|<5 to 0
+    if di.shape[0] != s_index.shape[0]:
+        print("Distance restraint cannot be imposed, bad input")
+        #IndexError: index 0 is out of bounds for axis 0 with size 0
+        print("s_index: ",s_index.shape[0],"di shape: ",di.shape[0])
+        #print('di:\n',di[0])
+        raise IndexError("matrix input dimensions do not matchup with simulation n_var")
+    di_distal = np.zeros(di.shape)
+    for i in range(di.shape[0]):
+        for j in range(di.shape[1]):
+            if(abs(s_index[i]-s_index[j])<5):
+                if make_large:
+                    di_distal[i][j]=35.
+                else:    
+                    di_distal[i][j]=0.
+            else:
+                di_distal[i][j] = di[i][j]
 
-	return di_distal
+    return di_distal
 #=========================================================================================
 def distance_restr_ct(ct,s_index,make_large=False):
-	# Hamstring DI matrix by setting all DI values st |i-j|<5 to 0
-	if 0:
-		if ct.shape[0] <= s_index[-1]:
-			print("ERROR in distance_restr_ct\n\nDistance restraint cannot be imposed, bad input\n")
-			#IndexError: index 0 is out of bounds for axis 0 with size 0
-			print("s_index max index: ",s_index[-1],"ct shape: ",ct.shape[0])
-			#print('di:\n',di[0])
-			raise IndexError("matrix input dimensions do not matchup with simulation n_var")
-	ct_distal = np.zeros(ct.shape)
-	print('contact map shape: ',ct_distal.shape)
-	try:
-		for i in range(ct.shape[0]):
-			for j in range(ct.shape[1]):
-				if(abs(s_index[i]-s_index[j]<5)):
-					if make_large:
-						ct_distal[i][j]=35.
-					else:	
-						ct_distal[i][j]=0.
-				else:
-					ct_distal[i][j] = ct[i][j]
-	except(IndexError):
-		print('ct shape: ',ct.shape, '  s_index length: ', len(s_index))
-		print('INDEX ERROR IN ECC_TOOLS:DISTANCE_RESTR_CT')
-		raise IndexError("matrix input dimensions do not matchup with simulation n_var")
-	return ct_distal
+    # Hamstring DI matrix by setting all DI values st |i-j|<5 to 0
+    if 0:
+        if ct.shape[0] <= s_index[-1]:
+            print("ERROR in distance_restr_ct\n\nDistance restraint cannot be imposed, bad input\n")
+            #IndexError: index 0 is out of bounds for axis 0 with size 0
+            print("s_index max index: ",s_index[-1],"ct shape: ",ct.shape[0])
+            #print('di:\n',di[0])
+            raise IndexError("matrix input dimensions do not matchup with simulation n_var")
+    ct_distal = np.zeros(ct.shape)
+    print('contact map shape: ',ct_distal.shape)
+    try:
+        for i in range(ct.shape[0]):
+            for j in range(ct.shape[1]):
+                if(abs(s_index[i]-s_index[j]<5)):
+                    if make_large:
+                        ct_distal[i][j]=35.
+                    else:    
+                        ct_distal[i][j]=0.
+                else:
+                    ct_distal[i][j] = ct[i][j]
+    except(IndexError):
+        print('ct shape: ',ct.shape, '  s_index length: ', len(s_index))
+        print('INDEX ERROR IN ECC_TOOLS:DISTANCE_RESTR_CT')
+        raise IndexError("matrix input dimensions do not matchup with simulation n_var")
+    return ct_distal
 
 
 # ER coupling setup 6/20/2020
@@ -559,7 +503,7 @@ def compute_single_site_freqs(alignment_data=None, seqs_weight=None,mx = None ):
         #print('seq position %d has %d states'%(i,num_site_states))
         column_i = alignment_data[:,i]
         for a in np.unique(column_i):#we use varying site states (unique vals in col)
-            #print('	a = ',a)
+            #print('    a = ',a)
             #print(np.unique(column_i)) # what values are in column_i?
             freq_ia = np.sum((column_i==a)*seqs_weight)
             single_site_freqs[-1].append(freq_ia/m_eff)
@@ -743,8 +687,8 @@ def construct_corr_mat(reg_fi = None, reg_fij = None, seqs_len = None,
                         corr_mat[row, col] = corr_ij_ab
                         corr_mat[col, row] = corr_ij_ab
                     except IndexError:
-                        print('ERROR: \n	row = %d of %d'%(row,mx.cumsum()[-1]) )
-                        print('       \n	col = %d of %d'%(col,mx.cumsum()[-1]) )
+                        print('ERROR: \n    row = %d of %d'%(row,mx.cumsum()[-1]) )
+                        print('       \n    col = %d of %d'%(col,mx.cumsum()[-1]) )
                         sys.exit()
 
             if i != j: pair_counter += 1

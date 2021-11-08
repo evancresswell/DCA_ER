@@ -133,9 +133,18 @@ dmypy.json
 *.dat
 *.pkl
 *.pickle
+
+# MSA / Sequence Data
 *.fasta
 *.fa
 *.FASTA
+*.cma
 PF*
 *.pdf
+*.gz
+*.tar*
+hiMSA/
+protein_data/data_processing_output/*
+protein_data/pdb_data/*
+
 >>>>>>> 783e72ee2a663acbb5da20ebd817d97d84a7439b
