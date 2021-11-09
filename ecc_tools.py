@@ -20,6 +20,12 @@ from matplotlib import colors as mpl_colors
 
 import random
 
+import requests
+import urllib
+import xml.etree.ElementTree as ET
+
+
+
 #--------------------------------------
 # write basic fasta file for given list
 def write_FASTA(ref_seq, msa,pfam_id,number_form=True,processed = True,path = './',nickname=''):
@@ -170,13 +176,70 @@ def gen_DI_matrix(DI):
     return di
 
 
-def contact_map(pdb,ipdb,cols_removed,s_index,ref_seq = None, printing=True, pdb_out_dir='./'):
+def get_PFAM_PDB_map(pdb_id, pdb_out_dir='./'):
+
+    # Should be downloading pdb-pfam mapping for each protein on-demand from:
+    #'ftp://ftp.ebi.ac.uk/pub/databases/msd/sifts/xml/%s/%s.xml.gz' % (pdb_id[1:3], pdb_id)
+    # and storing it here: xml_file = '%s/%s.xml' % (pdb_out_dir, pdb_id)
+  
+    # create element tree object
+    tree = ET.parse(xml_file)
+  
+    # get root element
+    root = tree.getroot()
+  
+    # create empty list for news items
+    newsitems = []
+  
+    # iterate news items
+    for item in root.findall('./channel/item'):
+  
+        # empty news dictionary
+        news = {}
+  
+        # iterate child elements of item
+        for child in item:
+  
+            # special checking for namespace object content:media
+            if child.tag == '{http://search.yahoo.com/mrss/}content':
+                news['media'] = child.attrib['url']
+            else:
+                news[child.tag] = child.text.encode('utf8')
+  
+        # append news dictionary to news items list
+        newsitems.append(news)
+      
+    # return news items list
+    return newsitems
+
+    """
+    from urllib.request import urlopen
+    from xml.etree.ElementTree import parse
+    
+    var_url = urlopen('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/%s' % pdb_id)
+    xmldoc = parse(var_url)
+    
+    for item in xmldoc.iterfind('channel/item'):
+        title = item.findtext('title')
+        date = item.findtext('pubDate')
+        link = item.findtext('link')
+    
+        print(title)
+        print(date)
+        print(link)
+        print()
+    """
+    
+
+def contact_map(pdb, ipdb, pp_range, cols_removed, s_index,ref_seq = None, printing=True, pdb_out_dir='./'):
     if printing:
         print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
         print(pdb[ipdb,:])
     pdb_id = pdb[ipdb,5]
     pdb_chain = pdb[ipdb,6]
-    pdb_start,pdb_end = int(pdb[ipdb,7])-1,int(pdb[ipdb,8])-1 # -1 due to array-indexing
+    #pdb_start,pdb_end = int(pdb[ipdb,6])-1,int(pdb[ipdb,8])-1 # -1 due to array-indexing
+    pdb_start,pdb_end = int(pp_range[0]-1), int(pp_range[1]-1)
+
     #print('pdb id, chain, start, end, length:',pdb_id,pdb_chain,pdb_start,pdb_end,pdb_end-pdb_start+1)
 
     #print('download pdb file')
