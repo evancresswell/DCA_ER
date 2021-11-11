@@ -277,7 +277,10 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index,ref_seq = None, print
         print('Polypeptide Ca Coord list: ',len(pp_ca_coords_full),'\n length: ',len(pp_ca_coords_full))
   
     # Extract coordinates and sequence char in PDB-range 
+    print('length of pp_ca_coords_full ', len(pp_ca_coords_full))
+    print('pdb range %d, %d' %(pdb_start-1, pdb_end))
     pp_ca_coords_full_range = pp_ca_coords_full[pdb_start-1:pdb_end]
+    print('length of pp_ca_coords_full ', len(pp_ca_coords_full_range))
     poly_seq_range = poly_seq[pdb_start-1:pdb_end]
     if printing:
         print('\n\nExtracting pdb-range from full list of polypeptide coordinates') 
