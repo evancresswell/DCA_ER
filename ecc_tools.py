@@ -6,6 +6,8 @@ import sys,os,errno
 # Import Bio data processing features 
 import Bio.PDB, warnings
 from Bio.PDB import *
+from numpy import shape
+
 pdb_list = Bio.PDB.PDBList()
 pdb_parser = Bio.PDB.PDBParser()
 from scipy.spatial import distance_matrix
@@ -277,12 +279,12 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index,ref_seq = None, print
         print('original poly_seq: \n', poly_seq,'\n length: ',len(poly_seq))
         print('Polypeptide Ca Coord list: ',len(pp_ca_coords_full),'\n length: ',len(pp_ca_coords_full))
   
-    # Extract coordinates and sequence char in PDB-range 
+    # Extract coordinates and sequence char in PDB-range
     print('length of pp_ca_coords_full ', len(pp_ca_coords_full))
     print('pdb range %d, %d' % (pdb_start, pdb_end))
-    pp_ca_coords_full_range = pp_ca_coords_full[pdb_start:pdb_end]
+    pp_ca_coords_full_range = pp_ca_coords_full[pdb_start:pdb_end+1]
     print('length of pp_ca_coords_full ', len(pp_ca_coords_full_range))
-    poly_seq_range = poly_seq[pdb_start:pdb_end]
+    poly_seq_range = poly_seq[pdb_start:pdb_end+1]
     if printing:
         print('\n\nExtracting pdb-range from full list of polypeptide coordinates') 
         print('PDB-range poly_seq: \n', poly_seq_range,'\n length: ',len(poly_seq_range))
@@ -332,13 +334,14 @@ def roc_curve(ct,di,ct_thres):
     ct1[ct_pos] = 1
     ct1[~ct_pos] = 0
 
-    mask = np.triu(np.ones(di.shape[0],dtype=bool), k=1)
+    mask = np.triu(np.ones(di.shape[0], dtype=bool), k=1)
     # argsort sorts from low to high. [::-1] reverses 
     order = di[mask].argsort()[::-1]
-
+    print("order dimensions: ", np.shape(order))
     ct_flat = ct1[mask][order]
-    #print(di[mask][order][:15])
-    #print(ct1[mask][order][:15])
+    print("ct_flat dimensions: ", np.shape(ct_flat))
+    # print(di[mask][order][:15])
+
     tp = np.cumsum(ct_flat, dtype=float)
     fp = np.cumsum(~ct_flat.astype(int), dtype=float)
 
@@ -346,11 +349,11 @@ def roc_curve(ct,di,ct_thres):
         tp /= tp[-1]
         fp /= fp[-1]
     
-    # bining (to reduce the size of tp,fp and make fp having the same values for every pfam)
+    # Binning (to reduce the size of tp,fp and make fp having the same values for every Pfam)
     nbin = 101
-    pbin = np.linspace(0,1,nbin, endpoint=True)
+    pbin = np.linspace(0, 1, nbin, endpoint=True)
 
-    #print(pbin)
+    # print(pbin)
 
     fp_size = fp.shape[0]
 
@@ -364,18 +367,18 @@ def roc_curve(ct,di,ct_thres):
             try:
                  fpbin[ibin] = fp[t1].mean()
             except RuntimeWarning:
-                 #print("Empty mean slice")
+                 # print("Empty mean slice")
                  fpbin[ibin] = 0
             try:
                  tpbin[ibin] = tp[t1].mean()
             except RuntimeWarning:
-                 #print("Empty mean slice")
+                 # print("Empty mean slice")
                  tpbin[ibin] = 0
         else:
-            #print(i)
+            # print(i)
             tpbin[ibin] = tpbin[ibin-1] 
-    #print(fp,tp)
-    #return fp,tp,pbin,fpbin,tpbin
+    # print(fp,tp)
+    # return fp,tp,pbin,fpbin,tpbin
     return pbin,tpbin,fpbin
 
 
