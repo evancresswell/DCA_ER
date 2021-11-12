@@ -234,26 +234,28 @@ def get_PFAM_PDB_map(pdb_id, pdb_out_dir='./'):
 def contact_map(pdb, ipdb, pp_range, cols_removed, s_index,ref_seq = None, printing=True, pdb_out_dir='./'):
     if printing:
         print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
-        print(pdb[ipdb,:])
-    pdb_id = pdb[ipdb,5]
-    pdb_chain = pdb[ipdb,6]
-    #pdb_start,pdb_end = int(pdb[ipdb,6])-1,int(pdb[ipdb,8])-1 # -1 due to array-indexing
-    pdb_start,pdb_end = int(pp_range[0]-1), int(pp_range[1]-1)
+        print(pdb[ipdb, :])
+    pdb_id = pdb[ipdb, 5]
+    pdb_chain = pdb[ipdb, 6]
+    # pdb_start,pdb_end = int(pdb[ipdb,6])-1,int(pdb[ipdb,8])-1 # -1 due to array-indexing
+    pdb_start_index, pdb_end_index = int(pp_range[0]-1), int(pp_range[1]-1)
+    pdb_start = pdb_start_index
+    pdb_end = pdb_end_index + 1
 
-    #print('pdb id, chain, start, end, length:',pdb_id,pdb_chain,pdb_start,pdb_end,pdb_end-pdb_start+1)
+    # print('pdb id, chain, start, end, length:',pdb_id,pdb_chain,pdb_start,pdb_end,pdb_end-pdb_start+1)
 
-    #print('download pdb file')
-    pdb_file = pdb_list.retrieve_pdb_file(str(pdb_id),file_format='pdb', pdir=pdb_out_dir)
-    #pdb_file = pdb_list.retrieve_pdb_file(pdb_id)
+    # print('download pdb file')
+    pdb_file = pdb_list.retrieve_pdb_file(str(pdb_id), file_format='pdb', pdir=pdb_out_dir)
+    # pdb_file = pdb_list.retrieve_pdb_file(pdb_id)
 
-    #-------------------------------------------------------------------------------------------------#
-    chain = pdb_parser.get_structure(str(pdb_id),pdb_file)[0][pdb_chain]
+    # ------------------------------------------------------------------------------------------------- #
+
+    chain = pdb_parser.get_structure(str(pdb_id), pdb_file)[0][pdb_chain]
     good_coords = []
-	
     coords_all = np.array([a.get_coord() for a in chain.get_atoms()])
-    ca_residues = np.array([a.get_name()=='CA' for a in chain.get_atoms()])
+    ca_residues = np.array([a.get_name() == 'CA' for a in chain.get_atoms()])
     ca_coords = coords_all[ca_residues]
-    in_range_ca_coords = ca_coords[pdb_start-1:pdb_end]
+    in_range_ca_coords = ca_coords[pdb_start:pdb_end]
     n_amino = len(in_range_ca_coords)
 
     ppb = PPBuilder().build_peptides(chain)
@@ -264,12 +266,11 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index,ref_seq = None, print
     # Get full list of CA coords from poly_seq
     poly_seq = list()
     pp_ca_coords_full = list()
-    for i,pp in enumerate(ppb):
+    for i, pp in enumerate(ppb):
         for char in str(pp.get_sequence()):
             poly_seq.append(char)                                     
         poly_seq_ca_atoms = pp.get_ca_list()
-        pp_ca_coords_full.extend( [a.get_coord() for a in poly_seq_ca_atoms])
-    
+        pp_ca_coords_full.extend([a.get_coord() for a in poly_seq_ca_atoms])
     
     n_amino_full = len(pp_ca_coords_full)
     if printing:
@@ -278,10 +279,10 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index,ref_seq = None, print
   
     # Extract coordinates and sequence char in PDB-range 
     print('length of pp_ca_coords_full ', len(pp_ca_coords_full))
-    print('pdb range %d, %d' %(pdb_start-1, pdb_end))
-    pp_ca_coords_full_range = pp_ca_coords_full[pdb_start-1:pdb_end]
+    print('pdb range %d, %d' % (pdb_start, pdb_end))
+    pp_ca_coords_full_range = pp_ca_coords_full[pdb_start:pdb_end]
     print('length of pp_ca_coords_full ', len(pp_ca_coords_full_range))
-    poly_seq_range = poly_seq[pdb_start-1:pdb_end]
+    poly_seq_range = poly_seq[pdb_start:pdb_end]
     if printing:
         print('\n\nExtracting pdb-range from full list of polypeptide coordinates') 
         print('PDB-range poly_seq: \n', poly_seq_range,'\n length: ',len(poly_seq_range))
@@ -290,7 +291,7 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index,ref_seq = None, print
 
     # Get curated polypeptide sequence (using cols_removed) & Get coords of curated pp seq
     poly_seq_curated = np.delete(poly_seq_range, cols_removed)
-    pp_ca_coords_curated = np.delete(pp_ca_coords_full[pdb_start-1:pdb_end],cols_removed,axis=0)
+    pp_ca_coords_curated = np.delete(pp_ca_coords_full_range, cols_removed, axis=0)
 
     if printing:
         print('Sequence inside given PDB range (poly_seq_range) with columns removed: (poly_seq_range_curated): \n', poly_seq_curated,'\n length: ',len(poly_seq_curated))
