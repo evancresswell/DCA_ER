@@ -337,9 +337,9 @@ def roc_curve(ct,di,ct_thres):
     mask = np.triu(np.ones(di.shape[0], dtype=bool), k=1)
     # argsort sorts from low to high. [::-1] reverses 
     order = di[mask].argsort()[::-1]
-    print("order dimensions: ", np.shape(order))
+    # print("order dimensions: ", np.shape(order))
     ct_flat = ct1[mask][order]
-    print("ct_flat dimensions: ", np.shape(ct_flat))
+    # print("ct_flat dimensions: ", np.shape(ct_flat))
     # print(di[mask][order][:15])
 
     tp = np.cumsum(ct_flat, dtype=float)
@@ -364,16 +364,18 @@ def roc_curve(ct,di,ct_thres):
         t1 = [(fp[t] > pbin[ibin] and fp[t] <= pbin[ibin+1]) for t in range(fp_size)]
 
         if len(t1)>0 :            
-            try:
-                 fpbin[ibin] = fp[t1].mean()
-            except RuntimeWarning:
-                 # print("Empty mean slice")
-                 fpbin[ibin] = 0
-            try:
-                 tpbin[ibin] = tp[t1].mean()
-            except RuntimeWarning:
-                 # print("Empty mean slice")
-                 tpbin[ibin] = 0
+            fpbin[ibin] = fp[t1].mean()
+            tpbin[ibin] = tp[t1].mean()
+            #try:
+            #     fpbin[ibin] = fp[t1].mean()
+            #except RuntimeWarning:
+            #     # print("Empty mean slice")
+            #     fpbin[ibin] = 0
+            #try:
+            #     tpbin[ibin] = tp[t1].mean()
+            #except RuntimeWarning:
+            #     # print("Empty mean slice")
+            #     tpbin[ibin] = 0
         else:
             # print(i)
             tpbin[ibin] = tpbin[ibin-1] 
