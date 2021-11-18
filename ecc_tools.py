@@ -445,7 +445,7 @@ def roc_curve(ct, di, ct_thres):
     return pbin, tpbin, fpbin
 
 
-on_pc = True
+on_pc = False
 if on_pc:
     from IPython.display import HTML
 
