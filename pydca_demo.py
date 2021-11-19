@@ -6,11 +6,12 @@ from pydca.plmdca import plmdca uthor: Mehari B. Zerihun
 
 # import pydca modules
 from pydca.plmdca import plmdca
-from pydca.meanfield_dca import meanfield_dca
-from pydca.sequence_backmapper import sequence_backmapper
+# from pydca.meanfield_dca import meanfield_dca
+# from pydca.sequence_backmapper import sequence_backmapper
 from pydca.msa_trimmer import msa_trimmer
+
 from pydca.contact_visualizer import contact_visualizer
-from pydca.dca_utilities import dca_utilities
+# from pydca.dca_utilities import dca_utilities
 import os
 import numpy as np
 import pandas as pd
@@ -22,15 +23,16 @@ print(os.getcwd())
 pfam_id = 'PF00186'
 ipdb = 0
 
-msa_npy_file = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/msa.npy' % pfam_id
-msa_fa_file  = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/msa.fa' % pfam_id
-pdb_ref_file = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/pdb_refs.npy' % pfam_id
 msa_npy_file = '/home/eclay/Pfam-A.full/%s/msa.npy' % pfam_id # Hurricane Location
 msa_fa_file  = '/home/eclay/Pfam-A.full/%s/msa.fa' % pfam_id # Hurricane Location
 pdb_ref_file = '/home/eclay/Pfam-A.full/%s/pdb_refs.npy' % pfam_id # Hurricane Location
 
-# os.chdir('/home/evan/PycharmProjects/DCA_ER')
-os.chdir('/home/eclay/DCA_ER') # Hurrican Location
+msa_npy_file = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/msa.npy' % pfam_id # Home Location
+msa_fa_file  = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/msa.fa' % pfam_id # Home Location
+pdb_ref_file = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/pdb_refs.npy' % pfam_id # Home Location
+
+os.chdir('/home/evan/PycharmProjects/DCA_ER')
+# os.chdir('/home/eclay/DCA_ER') # Hurrican Location
 # Set DCA_ER directory
 DCA_dir = os.getcwd()
 
@@ -84,6 +86,8 @@ plmdca_inst = plmdca.PlmDCA(
 
 # compute DCA scores summarized by Frobenius norm and average product corrected
 plmdca_FN_APC = plmdca_inst.compute_sorted_FN_APC()
+plm_out_file = '/home/evan/PycharmProjects/DCA_ER/%s_di_plm.npy' % pfam_id
+np.save(plm_out_file, plmdca_FN_APC)
 
 for site_pair, score in plmdca_FN_APC[:5]:
     print(site_pair, score)
