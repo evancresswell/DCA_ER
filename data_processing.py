@@ -355,6 +355,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     # print('read original aligned pfam data')
     # s = np.load('../%s/msa.npy'%pfam_id).T
     s = load_msa(data_path, pfam_id)
+    orig_seq_len = s.shape[1]
 
     # print('select only column presenting as uppercase at PDB sequence')
     # pdb = np.load('../%s/pdb_refs.npy'%pfam_id)
@@ -374,7 +375,9 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
 
     if printing:
         print("#\n\n-------------------------Remove Gaps--------------------------#")
+        print('Shape of s is : ', s.shape)
         print("s = \n", s)
+
 
     gap_pdb = s[tpdb] == '-'  # returns True/False for gaps/no gaps
     # print("removing gaps...")
@@ -486,7 +489,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     # print(mi.mean())
     np.save("%s/%s_removed_cols.npy" % (out_dir, pfam_id), removed_cols)
 
-    return s, removed_cols, s_index, tpdb
+    return s, removed_cols, s_index, tpdb, orig_seq_len
 
 
 # =========================================================================================
