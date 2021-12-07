@@ -348,8 +348,7 @@ def load_msa(data_path, pfam_id):
     return s
 
 
-def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, conserved_cols=0.8,
-                    printing=True, out_dir='./'):
+def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, conserved_cols=0.8, printing=True, out_dir='./', letter_format=False, remove_cols=True):
     # def data_processing(data_path,pfam_id,ipdb=0,gap_seqs=0.2,gap_cols=0.2,prob_low=0.004):
     # read parse_pfam data:
     # print('read original aligned pfam data')
@@ -369,7 +368,8 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
         print("pdb ref example (pdb[0])  (after UTF-8 decode, removing 'b'):\n", pdb[0])
 
     tpdb = int(pdb[ipdb, 1])
-    print('tpdb (s_ipdb) is : ', tpdb)
+    if printing:
+        print('tpdb (s_ipdb) is : ', tpdb)
     # tpdb is the sequence #
     # print(tpdb)
 
@@ -405,8 +405,6 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
 
     if printing:
         print(s.shape)
-
-    if printing:
         print("In Data Processing Reference Sequence (shape=", s[tpdb].shape, "): \n", s[tpdb])
     # print('remove sequences containing too many gaps')
     s, tpdb = remove_bad_seqs(s, tpdb, gap_seqs)  # removes all sequences (rows) with >gap_seqs gap %
@@ -447,11 +445,12 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     if printing:
         print("We remove conserved and bad columns with, at the following indices:\n", removed_cols)
 
-    # 2019.09.17: excluse conserved cols
-    # removed_cols = np.array(list(set(bad_cols) | set(lower_cols)))
 
-    s = np.delete(s, removed_cols, axis=1)
-    s_index = np.delete(s_index, removed_cols)
+    # info still pased through removed_cols but this way we can interact with full msa
+    if remove_cols:
+        s = np.delete(s, removed_cols, axis=1)
+        s_index = np.delete(s_index, removed_cols)
+
     if printing:
         print("Removed Columns...")
         print("s now has shape: ", s.shape)
@@ -463,8 +462,11 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     if printing:
         print("In Data Processing Reference Sequence (shape=", s[tpdb].shape, "): \n", s[tpdb])
 
-    # convert letter to number:
-    s = covert_letter2number(s)
+    # Convert S to number format (number representation of amino acids)
+    if not letter_format:
+        # convert letter to number:
+        s = covert_letter2number(s)
+
     # print(s.shape)
     # replace lower probs by higher probs 
     # print('replace lower probs by higher probs')
@@ -616,6 +618,7 @@ def data_processing_covid(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2
 
     s = np.delete(s, removed_cols, axis=1)
     s_index = np.delete(s_index, removed_cols)
+
     print(s_index)
     if printing:
         print("Removed Columns...")

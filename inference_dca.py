@@ -8,7 +8,11 @@ from scipy.spatial import distance
 #s0 = np.loadtxt('data_processed/%s_s0.txt'%(pfam_id)).astype(int)
 
 def frequency(s0,q,theta,pseudo_weight):
-    l,n = s0.shape
+    # q --> num site states (21)
+    # theta --> minimum percent differnce columns (1-seqid)(.2)
+    # pseudo_weight --> lambda equivalent (.5)
+
+    l,n = s0.shape # l --> number of sequences, n --> number of aa in each sequence
     
     # hamming distance
     dst = distance.squareform(distance.pdist(s0, 'hamming'))
@@ -139,13 +143,17 @@ def direct_info_dca(s0,q=21,theta=0.2,pseudo_weight=0.5):
 
     fi,fij = frequency(s0,q,theta,pseudo_weight)
     c = correlation(fi,fij,q,n)
-    c_inv = linalg.inv(c)
+
+    # c_inv = linalg.inv(c)
+    c_inv = np.linalg.inv(c)
+
+
     w,w2d = interactions(c_inv,q,n)
     #np.save('w.npy',w)  # 4d
     #np.savetxt('w2d.dat',w2d,fmt='%f') # 2d
     di = direct_info(w,fi,q,n)
     
-    return di
+    return di, fij, c, c_inv
 
 #np.savetxt('%s_di.dat'%(pfam_id),di,fmt='% f')
 #plt.imshow(di,cmap='rainbow',origin='lower')
