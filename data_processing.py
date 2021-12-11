@@ -48,6 +48,21 @@ def remove_bad_seqs(s, tpdb, fgs=0.3):
 
     return new_s, new_tpdb[0][0]
 
+def remove_seqs_list(s, tpdb, seqs_to_remove):
+    # remove sequence rows in list seqs_to_remove
+    #     -- update tpdb
+    l, n = s.shape
+
+    new_s = np.delete(s, seqs_to_remove, axis=0)
+    # Find new sequence index of Reference sequence tpdb
+    seq_index = np.arange(s.shape[0])
+    seq_index = np.delete(seq_index, seqs_to_remove)
+    new_tpdb = np.where(seq_index == tpdb)
+    print("After removing bad sequences, tpdb is now ", new_tpdb[0][0])
+
+    return new_s, new_tpdb[0][0]
+
+
 
 # ------------------------------#
 def remove_bad_cols(s, fg=0.3, fc=0.9):
@@ -356,6 +371,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     s = load_msa(data_path, pfam_id)
     orig_seq_len = s.shape[1]
 
+
     # print('select only column presenting as uppercase at PDB sequence')
     # pdb = np.load('../%s/pdb_refs.npy'%pfam_id)
     pdb = np.load('%s/%s/pdb_refs.npy' % (data_path, pfam_id))
@@ -403,6 +419,24 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     # upper = np.array([x.isupper() for x in s[0]])
     # s = s[:,upper]
 
+
+    # --- remove duplicates before processing (as done in pydca) --- #
+    if 1:
+        dup_rows = []
+        s_no_dup = []
+        for i, row in enumerate(s):
+            if [a for a in row] in s_no_dup:
+                dup_rows.append(i)
+            else:
+                s_no_dup.append([a for a in row])
+        if printing:
+            print('found and removed %d duplicates!' % len(dup_rows))
+        s, tpdb = remove_seqs_list(s, tpdb, dup_rows)
+    # -------------------------------------------------------------- #
+
+
+
+    # - Removing bad sequences (>gap_seqs gaps) -------------------- #
     if printing:
         print(s.shape)
         print("In Data Processing Reference Sequence (shape=", s[tpdb].shape, "): \n", s[tpdb])
@@ -411,25 +445,36 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     if printing:
         print('\nAfter removing bad sequences...\ntpdb (s_ipdb) is : ', tpdb)
         print(s.shape)
+    # -------------------------------------------------------------- #
+
+
+
 
     bad_cols = find_bad_cols(s, gap_cols)
     if printing:
         print('found bad columns :=', bad_cols)
 
-    # 2018.12.24:
-    # replace 'Z' by 'Q' or 'E' with prob
-    # print('replace Z by Q or E')
-    s = find_and_replace(s, 'Z', np.array(['Q', 'E']))
+    if 1: # replace aa with potential correct aa
+        # 2018.12.24:
+        # replace 'Z' by 'Q' or 'E' with prob
+        # print('replace Z by Q or E')
+        s = find_and_replace(s, 'Z', np.array(['Q', 'E']))
 
-    # replace 'B' by Asparagine (N) or Aspartic (D)
-    # print('replace B by N or D')
-    s = find_and_replace(s, 'B', np.array(['N', 'D']))
+        # replace 'B' by Asparagine (N) or Aspartic (D)
+        # print('replace B by N or D')
+        s = find_and_replace(s, 'B', np.array(['N', 'D']))
 
-    # replace 'X' as amino acids with prob
-    # print('replace X by other aminoacids')
-    amino_acids = np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', \
-                            'T', 'V', 'W', 'Y', 'U'])
-    s = find_and_replace(s, 'X', amino_acids)
+        # replace 'X' as amino acids with prob
+        # print('replace X by other aminoacids')
+        amino_acids = np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', \
+                                'T', 'V', 'W', 'Y', 'U'])
+        s = find_and_replace(s, 'X', amino_acids)
+    else: # replace aa with gap '-' (like in pydca)
+        if printing:
+            print('\n\nUsing PYDCA\'s method of replacing Z, B, and X with - instead of likely alternates...\n\n')
+        s = find_and_replace(s, 'Z', np.array(['-']))
+        s = find_and_replace(s, 'B', np.array(['-']))
+        s = find_and_replace(s, 'X', np.array(['-']))
 
     # remove conserved cols
     conserved_cols = find_conserved_cols(s, conserved_cols)

@@ -113,6 +113,7 @@ def npy2fa(pfam_id, npy_infile, pdb_ref_file, ipdb, preprocess=False, gap_seqs=.
         # data processing -- SPECIFICALLY we want to remove conserved columns from reference sequence so that pydca trims them
         s,cols_removed, s_index, tpdb, orig_seq_len = data_processing(msa_dir.parent, pfam_id, ipdb,
                 gap_seqs=gap_seqs, gap_cols=gap_cols, prob_low=prob_low, conserved_cols=conserved_cols, printing=False, out_dir=msa_dir, letter_format=True, remove_cols=False) # we want S to have amino acid letters and we want the full msa so we can replace removed_cols with '-' gaps
+        print('s after data_processing: ', s.shape)
         for col in cols_removed:
             temp_ref = s[tpdb, :]
             s[:tpdb, col] = '-'
@@ -137,7 +138,7 @@ def npy2fa(pfam_id, npy_infile, pdb_ref_file, ipdb, preprocess=False, gap_seqs=.
     gap_pdb = s[tpdb] == '-'  # returns True/False for gaps/no gaps in reference sequence
     s_gap = s[:, ~gap_pdb]  # removes gaps in reference sequence
     ref_s = s_gap[tpdb]
-    # print("shape of s \nimport from %s\n" % npy_infile, s.shape)
+    print("shape of s \nimport from %s\n" % npy_infile, s.shape)
     # print("shape of ref_s: ", ref_s.shape)
     # print(ref_s)
 

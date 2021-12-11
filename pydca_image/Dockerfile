@@ -26,18 +26,19 @@
 #RUN pip install --no-dependencies /home/DCA_ER/pydca/
 #
 
-# Python 3.7 version
+# Python 3.6 version
 FROM debian:buster-slim as intermediate
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-ENV PYTHON_VERSION 3.7
+ENV PYTHON_VERSION 3.6
 
 RUN apt-get update --fix-missing && \
-    apt-get install -y wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
+    apt-get install -y apt-utils wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
     apt-get clean
 
-RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh -O ~/anaconda.sh && \
+# RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh -O ~/anaconda.sh && \
+RUN wget --quiet https://repo.anaconda.com/archive/Anaconda3-2021.11-Linux-x86_64.sh -0 ~/anaconda.sh && \
     /bin/bash ~/anaconda.sh -b -p /opt/conda && \
     rm ~/anaconda.sh && \
     ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
@@ -93,9 +94,15 @@ RUN apt-get update --fix-missing && \
 #RUN mv muscle3.8.31_i86linux64 muscle
 #RUN chmod +x muscle
 
-RUN sudo /opt/conda/bin/pip install llvmlite --ignore-installed
-RUN /opt/conda/bin/pip install --no-dependencies /home/pydca/
-#RUN /opt/conda/bin/pip install /home/pydca/
+#RUN sudo /opt/conda/bin/pip install llvmlite --ignore-installed
+#RUN sudo /opt/conda/bin/pip install llvmlite --ignore-installed
+RUN conda install conda activate pydca
+RUN conda install python=3.6 
+RUN conda install numpy=1.15.0
+RUN conda install pandas
+RUN conda install numpy=1.15.0
+#RUN /opt/conda/bin/pip install --no-dependencies /home/pydca/
+RUN /opt/conda/bin/pip install /home/pydca/
 
 #USER test_user
 
