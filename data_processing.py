@@ -398,6 +398,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     gap_pdb = s[tpdb] == '-'  # returns True/False for gaps/no gaps
     # print("removing gaps...")
     s = s[:, ~gap_pdb]  # removes gaps
+
     # print('shape of s without reference sequence gaps: ', s.shape)
     s_index = np.arange(s.shape[1])
 
@@ -491,7 +492,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
         print("We remove conserved and bad columns with, at the following indices:\n", removed_cols)
 
 
-    # info still pased through removed_cols but this way we can interact with full msa
+    # info still pased through removed_cols but this way we can interact with full msa if remove_cols is False
     if remove_cols:
         s = np.delete(s, removed_cols, axis=1)
         s_index = np.delete(s_index, removed_cols)

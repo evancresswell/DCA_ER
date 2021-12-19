@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import linalg
 from scipy.spatial import distance
-import os
+import os, sys
 #import matplotlib.pyplot as plt
 #=========================================================================================
 #np.random.seed(1)
@@ -64,40 +64,76 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None):
     # theta --> minimum percent differnce columns (1-seqid)(.2)
     # pseudo_weight --> lambda equivalent (.5)
 
-    l,n = s0.shape # l --> number of sequences, n --> number of aa in each sequence
+    n, l = s0.shape # n --> number of sequences, l --> number of aa in each sequence
     print(s0.shape)
 
-    # hamming distance
+    # hamming distance  -- sequences weight calulation
     dst = distance.squareform(distance.pdist(s0, 'hamming'))
     ma_inv = 1/(1+(dst < theta).sum(axis=1).astype(float))
+    meff_tai = ma_inv.sum()
 
+    # pydca             -- sequences weight calculation
     if seq_weight_outfile is not None:
         seqs_weight = compute_sequences_weight(alignment_data = s0, seqid = float(1.-theta), outfile=seq_weight_outfile)
         meff = np.sum(seqs_weight)
-    else:
-        meff = ma_inv.sum()
+        fi_pydca = np.zeros((l, q))
+
+        for i in range(l):
+            for a in range(q):#we need gap states single site freqs too
+                column_i = s0[:,i]
+                freq_ia = np.sum((column_i==a)*seqs_weight)
+                fi_pydca[i, a-1] = freq_ia/meff
+        print(fi_pydca.shape)
+
+        num_site_pairs = (l -1)*l/2
+        num_site_pairs = np.int64(num_site_pairs)
+
+        # pydca DOES NOT CONSIDER GAPS (-) so the dimensions are q-1
+        fij_pydca = np.zeros(
+            shape=(num_site_pairs, q - 1, q - 1), # does not consider - in frequency calc
+            # shape=(q, q , q ), # considers gap in frequency calc
+            dtype = np.float64
+        )
+        for i in range(l - 1):
+            column_i = s0[:, i]
+            for j in range(i+1, l):
+                pair_site = int((l * (l - 1)/2) - (l - i) * ((l - i) - 1)/2  + j  - i - 1)
+                column_j = s0[:, j]
+
+                # pydca DOES NOT CONSIDER GAPS (-) so the range is q-1
+                for a in range(q-1):
+                    count_ai = column_i==a
+                    for b in range(q-1):
+                        count_bj = column_j==b
+                        count_ai_bj = count_ai * count_bj
+                        freq_ia_jb = np.sum(count_ai_bj*seqs_weight)
+                        fij_pydca[pair_site, a, b] += freq_ia_jb/meff
+        np.save('fij_pydca.npy', fij_pydca)
+
+
 
     # fi_true:
-    fi_true = np.zeros((n,q))
-    for t in range(l):
-        for i in range(n):
+    fi_true = np.zeros((l,q))
+    for t in range(n):
+        for i in range(l):
             fi_true[i,s0[t,i]] += ma_inv[t]
-    print('meff = ', meff)
+    print('meff for our MF = ', meff_tai)
 
-    fi_true /= meff
+
+    fi_true /= meff_tai
 
     # fij_true:
-    fij_true = np.zeros((n,n,q,q))
-    for t in range(l):
-        for i in range(n-1):
-            for j in range(i+1,n):
+    fij_true = np.zeros((l,l,q,q))
+    for t in range(n):
+        for i in range(l-1):
+            for j in range(i+1,l):
                 fij_true[i,j,s0[t,i],s0[t,j]] += ma_inv[t]
                 fij_true[j,i,s0[t,j],s0[t,i]] = fij_true[i,j,s0[t,i],s0[t,j]]
 
-    fij_true /= meff  
+    fij_true /= meff_tai
 
     scra = np.eye(q)
-    for i in range(n):
+    for i in range(l):
         for alpha in range(q):
             for beta in range(q):
                 fij_true[i,i,alpha,beta] = fi_true[i,alpha]*scra[alpha,beta]     
@@ -107,28 +143,62 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None):
     fij = (1 - pseudo_weight)*fij_true + pseudo_weight/(q**2)
 
     scra = np.eye(q)
-    for i in range(n):
+    for i in range(l):
         for alpha in range(q):
             for beta in range(q):
                 fij[i,i,alpha,beta] = (1 - pseudo_weight)*fij_true[i,i,alpha,beta] \
                 + pseudo_weight/q*scra[alpha,beta] 
 
-    return fi,fij            
+
+    if seq_weight_outfile is not None:
+        return fi,fij, fi_pydca, fij_pydca
+    else:
+        return fi, fij
 #=========================================================================================
 # convert index from 4d to 2d
 def mapkey(i,alpha,q):
     return i*(q-1) + alpha
 #=========================================================================================
-def correlation(fi,fij,q,n):
+def correlation(fi,fij,q,l, fi_pydca=None, fij_pydca=None):
+    print(fij_pydca.shape)
+
     # compute correlation matrix:
-    c = np.zeros((n*(q-1),n*(q-1)))
-    for i in range(n):
-        for j in range(n):
+    c = np.zeros((l*(q-1),l*(q-1)))
+    if fi_pydca is not None and fij_pydca is not None:
+        corr_mat = np.zeros((l*(q-1),l*(q-1)), dtype=np.float64)
+    pair_counter = 0
+    for i in range(l):
+        for j in range(i, l):
             for alpha in range(q-1):
                 for beta in range(q-1):
-                    c[mapkey(i,alpha,q),mapkey(j,beta,q)] = fij[i,j,alpha,beta] - fi[i,alpha]*fi[j,beta]
-                    
-    return c                
+
+
+                    #new improving diagonal..
+                    if i==j:
+                        fia, fib = fi[i, alpha], fi[i, beta]
+                        c[mapkey(i,alpha,q), mapkey(j,beta,q)] = fia*(1.0 - fia) if alpha == beta else -1.0*fia*fib
+                        c[mapkey(j,beta,q), mapkey(i,alpha,q)] = fia*(1.0 - fia) if alpha == beta else -1.0*fia*fib
+                    else:
+                        c[mapkey(i,alpha,q), mapkey(j,beta,q)] = fij[i, j, alpha, beta] - fi[i, alpha] * fi[j, beta]
+                        c[mapkey(j,beta,q), mapkey(i,alpha,q)] = fij[i, j, alpha, beta] - fi[i, alpha] * fi[j,beta]
+
+
+                    #c[mapkey(i,alpha,q),mapkey(j,beta,q)] = fij[i,j,alpha,beta] - fi[i,alpha]*fi[j,beta]
+                    #c[mapkey(j,beta,q), mapkey(i,alpha,q)] = fij[i,j,alpha,beta] - fi[i,alpha]*fi[j,beta]
+                    if fi_pydca is not None:
+                        if i==j:
+                            fia, fib = fi_pydca[i, alpha], fi_pydca[i, beta]
+                            corr_ij_ab = fia*(1.0 - fia) if alpha == beta else -1.0*fia*fib
+                        else:
+                            corr_ij_ab = fij_pydca[pair_counter, alpha, beta] - fi_pydca[i, alpha] * fi_pydca[j, beta]
+                        corr_mat[mapkey(i,alpha,q),mapkey(j,beta,q)] = corr_ij_ab
+                        corr_mat[mapkey(j,beta,q), mapkey(i,alpha,q)] = corr_ij_ab
+            if i != j : pair_counter += 1
+    print(l*(q-1)) 
+    if fi_pydca is None: 
+        return c                
+    else:
+        return c, corr_mat
 #=========================================================================================
 # set w = - c_inv
 def interactions(c_inv,q,n):
@@ -139,21 +209,21 @@ def interactions(c_inv,q,n):
             for alpha in range(q-1):
                 for beta in range(q-1):
                     w[i,j,alpha,beta] = -c_inv[mapkey(i,alpha,q),mapkey(j,beta,q)]
+                    w[i,j,alpha,beta] = -c_inv[mapkey(i,alpha,q),mapkey(j,beta,q)]
                     w2[mapkey(i,alpha,q),mapkey(j,beta,q)] = -c_inv[mapkey(i,alpha,q),mapkey(j,beta,q)]
                     
     w2 = w2+w2.T
     return w,w2
 #=========================================================================================
 # direct information
-def direct_info(w,fi,q,n):
-    
+def direct_info(w,fi,q,l):
     ew_all = np.exp(w)
-    di = np.zeros((n,n))
+    di = np.zeros((l,l))
     tiny = 10**(-100.)
     diff_thres = 10**(-4.)
 
-    for i in range(n-1):
-        for j in range(i+1,n):        
+    for i in range(l-1):
+        for j in range(i+1,l):        
             ew = ew_all[i,j,:,:]
 
             #------------------------------------------------------
@@ -197,25 +267,56 @@ def direct_info(w,fi,q,n):
     return di
 #=========================================================================================
 def direct_info_dca(s0,q=21,theta=0.2,pseudo_weight=0.5, seq_wt_outfile=None):
-    l,n = s0.shape
+    n, l = s0.shape # n --> number of sequences, l --> number of aa in each sequence
     mx = np.full(n,q)
     
     if seq_wt_outfile is not None:
-        fi,fij = frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=seq_wt_outfile)
+        fi,fij,fi_pydca, fij_pydca = frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=seq_wt_outfile)
     else:
         fi,fij = frequency(s0,q,theta,pseudo_weight)
-    c = correlation(fi,fij,q,n)
+
+    print(fi_pydca.shape)
+    # regularization of pydca's frequency
+    reg_fi_pydca = fi_pydca
+
+    print(reg_fi_pydca.shape)
+    theta_by_q = np.float64(pseudo_weight)/np.float64(q)
+    for i in range(l):
+        for a in range(q):
+            reg_fi_pydca[i, a] = theta_by_q + \
+                (1.0 - pseudo_weight)*reg_fi_pydca[i, a]
+    reg_fij_pydca = fij_pydca
+    theta_by_qsqrd = pseudo_weight/float(q * q)
+    pair_counter = 0
+    for i in range(l - 1):
+        for j in range(i + 1, l):
+            for a in range(q-1):
+                for b in range(q-1):
+                    reg_fij_pydca[pair_counter, a, b] = theta_by_qsqrd + \
+                        (1.0 - pseudo_weight)*reg_fij_pydca[pair_counter, a, b]
+            pair_counter += 1
+
+
+
+
+
+    c, c_pydca = correlation(fi,fij,q,l, fi_pydca, fij_pydca)
 
     # c_inv = linalg.inv(c)
     c_inv = np.linalg.inv(c)
+    c_inv_pydca = np.linalg.inv(c_pydca)
 
 
-    w,w2d = interactions(c_inv,q,n)
+    w,w2d = interactions(c_inv,q,l)
+    w_pydca,w2d_pydca = interactions(c_inv_pydca,q,l)
+
     #np.save('w.npy',w)  # 4d
     #np.savetxt('w2d.dat',w2d,fmt='%f') # 2d
-    di = direct_info(w,fi,q,n)
+
+    di = direct_info(w,fi,q,l)
+    di_pydca = direct_info(w_pydca,fi_pydca,q,l)
     
-    return di, fi, fij, c, c_inv
+    return di, fi, fij, c, c_inv, w, w2d, reg_fi_pydca, reg_fij_pydca, c_pydca, c_inv_pydca, w_pydca, w2d_pydca, di_pydca
 
 #np.savetxt('%s_di.dat'%(pfam_id),di,fmt='% f')
 #plt.imshow(di,cmap='rainbow',origin='lower')
