@@ -9,6 +9,7 @@ Pfam-A.full/
 *.so
 
 # Distribution / packaging
+*.simg
 .Python
 build/
 develop-eggs/
