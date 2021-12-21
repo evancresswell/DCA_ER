@@ -21,4 +21,25 @@
 	#-------------------------------------------------#
 
 #------------------------------------------------------#
+#----- Run Jupyter notebook throught Singularity ------#
+
+# start intervative session with sufficient mem/cpu and tunneling from compute node to biowulf login
+sinteractive --mem=50g --cpus-per-task=32 --tunnel
+
+# create tunnel from biowulf login to local computer
+ex: ssh  -L 41119:localhost:41119 cresswellclayec@biowulf.nih.gov
+
+# run singularity shell with anaconda envionrment
+singularity shell --bind /data/cresswellclayec/DCA_ER /path/to/<erdca-container>.simg 
+
+# activate anaconda in singularity shell
+source ~/.bashrc
+
+# activate enviornment
+conda activate pydca
+
+# run notebook
+jupyter notebook --ip localhost --port $PORT1 --no-browser
+#------------------------------------------------------#
+
 #------------------------------------------------------#
