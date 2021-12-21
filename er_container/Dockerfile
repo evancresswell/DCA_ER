@@ -55,7 +55,7 @@ RUN set -x && \
     /opt/conda/bin/conda clean -afy
 
 RUN apt-get update --fix-missing && \
-    apt-get install -y wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
+    apt-get install -y vim wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
     apt-get clean
 
 WORKDIR /home/

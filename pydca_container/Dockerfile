@@ -55,7 +55,7 @@ RUN set -x && \
     /opt/conda/bin/conda clean -afy
 
 RUN apt-get update --fix-missing && \
-    apt-get install -y wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
+    apt-get install -y vim wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
     apt-get clean
 
 WORKDIR /home/
@@ -63,11 +63,11 @@ WORKDIR /home/
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-RUN conda create --name pydca python=3.6
-RUN conda install --name pydca numpy=1.15.0
-RUN conda install --name pydca pandas
+
+RUN conda create --name dca_er --file spec-file.txt
 
 RUN git clone https://github.com/KIT-MBS/pydca.git
+
 #RUN /opt/conda/bin/pip install --no-dependencies /home/pydca/
 RUN /opt/conda/envs/pydca/bin/pip3 install /home/pydca/
 
