@@ -1,6 +1,11 @@
 # protein-emachine
 # github token: 4de5804a0bb1014bfacfc2466187741403f41b6c
 
+# FOR FULLY UPDATED enviornment run in pydca conda enviornment:
+# $ conda list --explicit > spec-file.txt
+# 		--> this is used in Dockerfile to generate conda enviornment for pydca
+
+
 #------------------------------------------------------#
 #----- Generate Singularity Container to Run Code -----#
 ## In DCA_ER/er_images/ (location of Dockerfile)
