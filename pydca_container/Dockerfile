@@ -65,7 +65,7 @@ ENV PATH /opt/conda/bin:$PATH
 
 RUN git clone --recurse-submodules https://github.com/evancresswell/DCA_ER.git
 
-RUN conda create --name pydca --file /home/DCA_ER/pydca_container/spec-file.txt
+RUN conda create --name pydca --file /home/DCA_ER/pydca_container/pydca_spec-file.txt
 RUN conda activate pydca
 # RUN conda install --file /home/DCA_ER/pydca_container/spec-file.txt
 
