@@ -131,7 +131,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 =======
-*.txt
 *.dat
 *.pkl
 *.pickle
@@ -149,4 +148,3 @@ hiMSA/
 protein_data/data_processing_output/*
 protein_data/pdb_data/*
 
->>>>>>> 783e72ee2a663acbb5da20ebd817d97d84a7439b
