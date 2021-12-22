@@ -1,4 +1,5 @@
 # protein-emachine
+# docker login: --->  sudo cat password.txt | sudo docker login --username evancresswell --password-stdin
 # FOR FULLY UPDATED enviornment run in DCA_ER conda enviornment:
 # $ conda list --explicit > spec-file.txt
 # 		--> this is used in Dockerfile to generate conda enviornment for DCA_ER

@@ -55,15 +55,18 @@ RUN set -x && \
     /opt/conda/bin/conda clean -afy
 
 RUN apt-get update --fix-missing && \
-    apt-get install -y wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
+    apt-get install -y vim wget build-essential bzip2 ca-certificates libglib2.0-0 libxext6 libsm6 libxrender1 git mercurial subversion sudo && \
     apt-get clean
 
+
 WORKDIR /home/
+
+RUN git clone https://github.com/evancresswell/DCA_ER.git
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-RUN conda create --name dca_er --file spec-file.txt
+RUN conda create --name dca_er --file /home/DCA_ER/er_container/spec-file.txt
 
 
 
