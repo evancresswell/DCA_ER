@@ -66,7 +66,7 @@ RUN git clone https://github.com/evancresswell/DCA_ER.git
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
-RUN conda create --name dca_er --file /home/DCA_ER/er_container/spec-file.txt
+RUN conda create --name dca_er --file /home/DCA_ER/er_container/er_spec-file.txt
 
 
 
