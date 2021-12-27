@@ -59,7 +59,7 @@ def compute_sequences_weight(alignment_data, seqid, outfile=None):
 
 
 
-def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None):
+def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     # q --> num site states (21)
     # theta --> minimum percent differnce columns (1-seqid)(.2)
     # pseudo_weight --> lambda equivalent (.5)
@@ -83,6 +83,10 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None):
                 column_i = s0[:,i]
                 freq_ia = np.sum((column_i==a)*seqs_weight)
                 fi_pydca[i, a-1] = freq_ia/meff
+
+                if first10:
+                    print('site %d-%d freq and count:' % (i,a), freq_ia, np.sum((column_i==a)))
+
         print(fi_pydca.shape)
 
         num_site_pairs = (l -1)*l/2
@@ -107,6 +111,10 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None):
                         count_bj = column_j==b
                         count_ai_bj = count_ai * count_bj
                         freq_ia_jb = np.sum(count_ai_bj*seqs_weight)
+
+                        if first10:
+                            print('freq for %d-%d, %d-%d:' %(i,a,j,b), freq_ia_jb)
+
                         fij_pydca[pair_site, a, b] += freq_ia_jb/meff
         np.save('fij_pydca.npy', fij_pydca)
 
@@ -266,12 +274,12 @@ def direct_info(w,fi,q,l):
     di = di + di.T
     return di
 #=========================================================================================
-def direct_info_dca(s0,q=21,theta=0.2,pseudo_weight=0.5, seq_wt_outfile=None):
+def direct_info_dca(s0,q=21,theta=0.2,pseudo_weight=0.5, seq_wt_outfile=None, first10=False):
     n, l = s0.shape # n --> number of sequences, l --> number of aa in each sequence
     mx = np.full(n,q)
     
     if seq_wt_outfile is not None:
-        fi,fij,fi_pydca, fij_pydca = frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=seq_wt_outfile)
+        fi,fij,fi_pydca, fij_pydca = frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=seq_wt_outfile, first10=first10)
     else:
         fi,fij = frequency(s0,q,theta,pseudo_weight)
 
