@@ -3,29 +3,23 @@ author: Mehari B. Zerihun
 """
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------- #
-print('importing11')
 # import pydca modules
 import pydca
-print(pydca.plmdca)
-print('importing1pydca1')
+
 from pydca.plmdca import plmdca
-print('importing1')
+
 from pydca.meanfield_dca import meanfield_dca
-print('importing2')
+
 from pydca import sequence_backmapper
-print('importing3')
+
 from pydca.msa_trimmer import msa_trimmer
-print('importing4')
+
 from pydca.contact_visualizer import contact_visualizer
-print('importing5')
+
 from pydca import dca_utilities
-print('importing6')
 import os
-print('importing7')
 import pandas as pd
-print('importing8')
 import numpy as np
-print('importing9')
 
 print(os.getcwd())
 
@@ -45,14 +39,13 @@ if 1:
     msa_fa_file  = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/msa.fa' % pfam_id
     pdb_ref_file = '/home/evan/PycharmProjects/DCA_ER/Pfam-A.full/%s/pdb_refs.npy' % pfam_id
     out_dir = '%sprotein_data/di/' % DCA_ER_dir
-if 0:
+if 1:
     DCA_ER_dir = '/home/ecresswell/DCA_ER/'
     msa_npy_file = '/home/ecresswell/DCA_ER/Pfam-A.full/%s/msa.npy' % pfam_id
     msa_fa_file  = '/home/ecresswell/DCA_ER/Pfam-A.full/%s/msa.fa' % pfam_id
     pdb_ref_file = '/home/ecresswell/DCA_ER/Pfam-A.full/%s/pdb_refs.npy' % pfam_id
     out_dir = '%sprotein_data/di/' % DCA_ER_dir
-
-if 1:
+if 0:
     DCA_ER_dir = '/data/cresswellclayec/DCA_ER/'
     msa_npy_file = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/msa.npy' % pfam_id
     msa_fa_file  = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/msa.fa' % pfam_id
