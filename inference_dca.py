@@ -71,6 +71,7 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     dst = distance.squareform(distance.pdist(s0, 'hamming'))
     seq_ints = (dst < theta).sum(axis=1).astype(float)
     ma_inv = 1/((dst < theta).sum(axis=1).astype(float))
+    # ma_inv = 1/(1+(dst < theta).sum(axis=1).astype(float)) ## tai's version
     print('ma_inv (sequences weight shape: ', ma_inv.shape)
     meff_tai = ma_inv.sum()
 
