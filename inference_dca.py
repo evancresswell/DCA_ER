@@ -69,7 +69,9 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
 
     # hamming distance  -- sequences weight calulation
     dst = distance.squareform(distance.pdist(s0, 'hamming'))
-    ma_inv = 1/(1+(dst < theta).sum(axis=1).astype(float))
+    seq_ints = (dst < theta).sum(axis=1).astype(float)
+    ma_inv = 1/((dst < theta).sum(axis=1).astype(float))
+    print('ma_inv (sequences weight shape: ', ma_inv.shape)
     meff_tai = ma_inv.sum()
 
     # pydca             -- sequences weight calculation
@@ -159,7 +161,7 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
 
 
     if seq_weight_outfile is not None:
-        return fi,fij, fi_pydca, fij_pydca
+        return fi,fij, fi_pydca, fij_pydca, ma_inv, seq_ints
     else:
         return fi, fij
 #=========================================================================================
@@ -279,7 +281,7 @@ def direct_info_dca(s0,q=21,theta=0.2,pseudo_weight=0.5, seq_wt_outfile=None, fi
     mx = np.full(n,q)
     
     if seq_wt_outfile is not None:
-        fi,fij,fi_pydca, fij_pydca = frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=seq_wt_outfile, first10=first10)
+        fi,fij,fi_pydca, fij_pydca, ma_inv,seq_ints = frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=seq_wt_outfile, first10=first10)
     else:
         fi,fij = frequency(s0,q,theta,pseudo_weight)
 
@@ -324,7 +326,7 @@ def direct_info_dca(s0,q=21,theta=0.2,pseudo_weight=0.5, seq_wt_outfile=None, fi
     di = direct_info(w,fi,q,l)
     di_pydca = direct_info(w_pydca,fi_pydca,q,l)
     
-    return di, fi, fij, c, c_inv, w, w2d, reg_fi_pydca, reg_fij_pydca, c_pydca, c_inv_pydca, w_pydca, w2d_pydca, di_pydca
+    return di, fi, fij, c, c_inv, w, w2d, reg_fi_pydca, reg_fij_pydca, c_pydca, c_inv_pydca, w_pydca, w2d_pydca, di_pydca, ma_inv,seq_ints
 
 #np.savetxt('%s_di.dat'%(pfam_id),di,fmt='% f')
 #plt.imshow(di,cmap='rainbow',origin='lower')
