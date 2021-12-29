@@ -79,17 +79,18 @@ def score_APC(scores_matrix, N, s_index):
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
-def di_dict2mat(pydca_score, s_index, cols_removed = None):
+def di_dict2mat(pydca_score, s_index, cols_removed = None, full_contact=False):
     # This functions converts the dictionary (with 2 int index tuple as keys) of pydca scores to a di matrix which
     #   incorporates the removed columns during pre-processing (cols_removed) resulting in a pydca di matrix with
     #   correct dimensions
     for pair, score in pydca_score:
         print(pair, score)
 
-    if cols_removed is not None:
+    if full_contact:
         column_count = len(s_index) + len(cols_removed)
     else:
         column_count = len(s_index)
+
     pydca_di = np.zeros((column_count, column_count))
     # ijs = []
     for [(i, j), score] in pydca_score:

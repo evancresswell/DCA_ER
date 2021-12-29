@@ -74,6 +74,7 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     # ma_inv = 1/(1+(dst < theta).sum(axis=1).astype(float)) ## tai's version
     print('ma_inv (sequences weight shape: ', ma_inv.shape)
     meff_tai = ma_inv.sum()
+    print('tais meff = %f' % meff_tai)
 
     # pydca             -- sequences weight calculation
     if seq_weight_outfile is not None:
@@ -86,9 +87,6 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
                 column_i = s0[:,i]
                 freq_ia = np.sum((column_i==a)*seqs_weight)
                 fi_pydca[i, a-1] = freq_ia/meff
-
-                if first10:
-                    print('site %d-%d freq and count:' % (i,a), freq_ia, np.sum((column_i==a)))
 
         print(fi_pydca.shape)
 
@@ -114,10 +112,6 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
                         count_bj = column_j==b
                         count_ai_bj = count_ai * count_bj
                         freq_ia_jb = np.sum(count_ai_bj*seqs_weight)
-
-                        if first10:
-                            print('freq for %d-%d, %d-%d:' %(i,a,j,b), freq_ia_jb)
-
                         fij_pydca[pair_site, a, b] += freq_ia_jb/meff
         np.save('fij_pydca.npy', fij_pydca)
 
@@ -127,11 +121,13 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     fi_true = np.zeros((l,q))
     for t in range(n):
         for i in range(l):
-            fi_true[i,s0[t,i]] += ma_inv[t]
+            freq_ia = ma_inv[t] / meff_tai
+            fi_true[i,s0[t,i]] = freq_ia  # set correct location (dictated by amino acid number) to sequence weight scaled by effective number of sequences
+
     print('meff for our MF = ', meff_tai)
 
-
-    fi_true /= meff_tai
+    # done in line ecc - 12/28/21 added in loop
+    # fi_true /= meff_tai
 
     # fij_true:
     fij_true = np.zeros((l,l,q,q))
@@ -159,6 +155,10 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
             for beta in range(q):
                 fij[i,i,alpha,beta] = (1 - pseudo_weight)*fij_true[i,i,alpha,beta] \
                 + pseudo_weight/q*scra[alpha,beta] 
+                if first10:
+                    print('freq for %d-%d, %d-%d:' %(i,s0[t,j],j,s0[t,j]), fij_true[i,j,s0[t,i],s0[t,j]])
+
+
 
 
     if seq_weight_outfile is not None:
