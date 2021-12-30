@@ -70,8 +70,8 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     # hamming distance  -- sequences weight calulation
     dst = distance.squareform(distance.pdist(s0, 'hamming'))
     seq_ints = (dst < theta).sum(axis=1).astype(float)
-    ma_inv = 1/((dst < theta).sum(axis=1).astype(float))
     # ma_inv = 1/(1+(dst < theta).sum(axis=1).astype(float)) ## tai's version
+    ma_inv = 1/((dst < theta).sum(axis=1).astype(float))  ## ECC CHANGE - not adding 1 for identity distance since distance.squareform does that already
     print('ma_inv (sequences weight shape: ', ma_inv.shape)
     meff_tai = ma_inv.sum()
     print('tais meff = %f' % meff_tai)
@@ -88,7 +88,7 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
                 freq_ia = np.sum((column_i==a)*seqs_weight)
                 fi_pydca[i, a-1] = freq_ia/meff
 
-        print(fi_pydca.shape)
+        # print('fi_pydca.shape: ', fi_pydca.shape)
 
         num_site_pairs = (l -1)*l/2
         num_site_pairs = np.int64(num_site_pairs)
@@ -119,14 +119,21 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
 
     # fi_true:
     fi_true = np.zeros((l,q))
+    fi_count = np.zeros((l,q))
     for t in range(n):
         for i in range(l):
-            freq_ia = ma_inv[t] / meff_tai
-            fi_true[i,s0[t,i]] = freq_ia  # set correct location (dictated by amino acid number) to sequence weight scaled by effective number of sequences
+            freq_ia = ma_inv[t] / meff_tai  # adding division here, step by step, instead of at the end ## ECC CHANGE
+            fi_true[i,s0[t,i]] += freq_ia  # set correct location (dictated by amino acid number) to sequence weight scaled by effective number of sequences
+            fi_count[i,s0[t,i]] += 1  # get aa frequency counts for comparison with pydca
+
+    for i in range(l):
+        for a in range(q-1):
+            print('site %d-%d freq and count: ' % (i, a), fi_true[i,a], fi_count[i, a])
+
 
     print('meff for our MF = ', meff_tai)
 
-    # done in line ecc - 12/28/21 added in loop
+    # done in line ecc - 12/28/21 added in loop ## ECC CHANGE
     # fi_true /= meff_tai
 
     # fij_true:
@@ -155,8 +162,8 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
             for beta in range(q):
                 fij[i,i,alpha,beta] = (1 - pseudo_weight)*fij_true[i,i,alpha,beta] \
                 + pseudo_weight/q*scra[alpha,beta] 
-                if first10:
-                    print('freq for %d-%d, %d-%d:' %(i,s0[t,j],j,s0[t,j]), fij_true[i,j,s0[t,i],s0[t,j]])
+                #if first10:
+                #    print('freq for %d-%d, %d-%d:' %(i,s0[t,j],j,s0[t,j]), fij_true[i,j,s0[t,i],s0[t,j]])
 
 
 
