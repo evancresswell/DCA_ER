@@ -122,13 +122,17 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     fi_count = np.zeros((l,q))
     for t in range(n):
         for i in range(l):
-            freq_ia = ma_inv[t] / meff_tai  # adding division here, step by step, instead of at the end ## ECC CHANGE
+            freq_ia = ma_inv[t] 
             fi_true[i,s0[t,i]] += freq_ia  # set correct location (dictated by amino acid number) to sequence weight scaled by effective number of sequences
             fi_count[i,s0[t,i]] += 1  # get aa frequency counts for comparison with pydca
 
+    fi_true /= meff_tai # # / meff_tai  # adding division here, step by step, instead of at the end ## ECC CHANGE
+
+
     for i in range(l):
         for a in range(q-1):
-            print('site %d-%d freq and count: ' % (i, a), fi_true[i,a], fi_count[i, a])
+            if fi_true[i,a] > 0.:
+                print('site %d-%d freq and count: ' % (i, a), fi_true[i,a], fi_count[i, a])
 
 
     print('meff for our MF = ', meff_tai)
@@ -155,6 +159,14 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     # fi, fij
     fi = (1 - pseudo_weight)*fi_true + pseudo_weight/q
     fij = (1 - pseudo_weight)*fij_true + pseudo_weight/(q**2)
+
+    for i in range(l):
+        for a in range(q-1):
+            if fi[i,a] > 0.:
+                print('site %d-%d regularized freq: ' % (i, a), fi[i,a])
+    print('pseudo weight = ', pseudo_weight)
+
+
 
     scra = np.eye(q)
     for i in range(l):
