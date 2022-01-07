@@ -33,12 +33,21 @@ def read_seq_file(seq_file):
 
 
 # =========================================================================================#
-def remove_bad_seqs(s, tpdb, fgs=0.3):
-    # remove bad sequences having a gap fraction of fgs  
-    l, n = s.shape
+def remove_bad_seqs(s, tpdb, fgs=0.3, trimmed_by_refseq=True):
+    # if trimmed by reference sequence, create a temp matrix to find bad sequences
+    if not trimmed_by_refseq:
+        s_temp = s.copy()
+        gap_pdb = s[tpdb] == '-'  # returns True/False for gaps/no gaps in reference sequence
+        s_temp = s_temp[:, ~gap_pdb]  # removes gaps in reference sequence
+    else:
+        s_temp = s
 
-    frequency = [(s[t, :] == '-').sum() / float(n) for t in range(l)]
+    # remove bad sequences having a gap fraction of fgs  
+    l, n = s_temp.shape
+
+    frequency = [(s_temp[t, :] == '-').sum() / float(n) for t in range(l)]
     bad_seq = [t for t in range(l) if frequency[t] > fgs]
+    print(len(bad_seq))
     new_s = np.delete(s, bad_seq, axis=0)
     # Find new sequence index of Reference sequence tpdb
     seq_index = np.arange(s.shape[0])

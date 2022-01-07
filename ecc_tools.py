@@ -79,12 +79,12 @@ def score_APC(scores_matrix, N, s_index):
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
-def di_dict2mat(pydca_score, s_index, cols_removed = None, full_contact=False):
+def di_dict2mat(pydca_score, s_index, cols_removed = None, full_contact=False, aa_index_correction=True):
     # This functions converts the dictionary (with 2 int index tuple as keys) of pydca scores to a di matrix which
     #   incorporates the removed columns during pre-processing (cols_removed) resulting in a pydca di matrix with
     #   correct dimensions
-    for pair, score in pydca_score:
-        print(pair, score)
+    #for pair, score in pydca_score:
+    #    print(pair, score)
 
     if full_contact:
         column_count = len(s_index) + len(cols_removed)
@@ -96,8 +96,13 @@ def di_dict2mat(pydca_score, s_index, cols_removed = None, full_contact=False):
     for [(i, j), score] in pydca_score:
         # ijs.append(i)
         # ijs.append(j)
-        pydca_di[i-1, j-1] = score
-        pydca_di[j-1, i-1] = score
+        if aa_index_correction:
+            pydca_di[i-1, j-1] = score
+            pydca_di[j-1, i-1] = score
+        else:
+            pydca_di[i, j] = score
+            pydca_di[j, i] = score
+
     # print('max index: ', max(ijs))
     print('DI shape (full size)' , pydca_di.shape)
     if cols_removed is not None:
@@ -144,6 +149,15 @@ def npy2fa(pfam_id, npy_infile, pdb_ref_file, ipdb, preprocess=False, gap_seqs=.
         pdb = np.array([pdb[t, i].decode('UTF-8') for t in range(pdb.shape[0])
                         for i in range(pdb.shape[1])]).reshape(pdb.shape[0], pdb.shape[1])
         tpdb = int(pdb[ipdb, 1])
+
+        # we still want to remove bad sequences
+        # - Removing bad sequences (>gap_seqs gaps) -------------------- #
+        from data_processing import remove_bad_seqs
+        # removes all sequences (rows) with >gap_seqs gap %
+        s, tpdb = remove_bad_seqs(s, tpdb, gap_seqs, trimmed_by_refseq=False)  
+        # -------------------------------------------------------------- #
+
+
 
     # # ---- Get Reference Seq --------- # #
 
@@ -205,7 +219,7 @@ def npy2fa(pfam_id, npy_infile, pdb_ref_file, ipdb, preprocess=False, gap_seqs=.
 
     if not preprocess:
         # Return MSA and Reference FASTA file names
-        return msa_outfile, ref_outfile
+        return msa_outfile, ref_outfile, s
     else:
         return msa_outfile, ref_outfile, s, cols_removed, s_index, tpdb, orig_seq_len 
 

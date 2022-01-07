@@ -129,10 +129,10 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     fi_true /= meff_tai # # / meff_tai  # adding division here, step by step, instead of at the end ## ECC CHANGE
 
 
-    for i in range(l):
-        for a in range(q-1):
-            if fi_true[i,a] > 0.:
-                print('site %d-%d freq and count: ' % (i, a), fi_true[i,a], fi_count[i, a])
+    #for i in range(l):
+    #    for a in range(q-1):
+    #        if fi_true[i,a] > 0.:
+    #            print('site %d-%d freq and count: ' % (i, a), fi_true[i,a], fi_count[i, a])
 
 
     print('meff for our MF = ', meff_tai)
@@ -160,11 +160,11 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
     fi = (1 - pseudo_weight)*fi_true + pseudo_weight/q
     fij = (1 - pseudo_weight)*fij_true + pseudo_weight/(q**2)
 
-    for i in range(l):
-        for a in range(q-1):
-            if fi[i,a] > 0.:
-                print('site %d-%d regularized freq: ' % (i, a), fi[i,a])
-    print('pseudo weight = ', pseudo_weight)
+    #for i in range(l):
+    #    for a in range(q-1):
+    #        if fi[i,a] > 0.:
+    #            print('site %d-%d regularized freq: ' % (i, a), fi[i,a])
+    #print('pseudo weight = ', pseudo_weight)
 
 
 
