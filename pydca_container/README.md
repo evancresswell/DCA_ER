@@ -1,5 +1,17 @@
 # protein-emachine
-# github token: 4de5804a0bb1014bfacfc2466187741403f41b6c
+# docker login: --->  sudo cat password.txt | sudo docker login --username evancresswell --password-stdin
+# FOR FULLY UPDATED enviornment run in PYDCA conda enviornment:
+# $ conda list --explicit > pydca_spec-file.txt
+# 		--> this is used in Dockerfile to generate conda enviornment for DCA_ER
+
+#------- Containerize Python Enviornment --------------#
+https://newbedev.com/containerize-a-conda-environment-in-a-singularity-container
+sudo singularity build ContainerName.sif YourDefineFile.def
+Singularity shell YourContainerName.sif 
+conda env create --name envname --file=YourEnvironments.yml
+singularity shell YourContainer.Sif
+source activate YourEnvName
+#------------------------------------------------------#
 
 #------------------------------------------------------#
 #----- Generate Singularity Container to Run Code -----#

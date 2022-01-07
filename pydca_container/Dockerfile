@@ -66,12 +66,12 @@ ENV PATH /opt/conda/bin:$PATH
 RUN git clone --recurse-submodules https://github.com/evancresswell/DCA_ER.git
 
 # RUN source /opt/conda/etc/profile.d/conda.sh
-RUN sudo /opt/conda/bin/conda create --name pydca --file /home/DCA_ER/pydca_container/pydca_spec-file.txt
+RUN sudo /opt/conda/bin/conda create --name PYDCA --file /home/DCA_ER/pydca_container/pydca_spec-file.txt
 #RUN sudo /opt/conda/bin/conda install --file /home/DCA_ER/pydca_container/pydca_spec-file.txt 
 
 WORKDIR /home/DCA_ER/pydca/
 #RUN /opt/conda/bin/pip install --no-dependencies /home/pydca/
-RUN /opt/conda/envs/pydca/bin/pip3 install .
+RUN /opt/conda/envs/PYDCA/bin/pip install .
 #RUN opt/conda/bin/pip install pydca
 
 

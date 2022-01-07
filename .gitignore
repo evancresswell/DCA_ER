@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -9,6 +8,7 @@ Pfam-A.full/
 *.so
 
 # Distribution / packaging
+*.sif
 *.simg
 .Python
 build/
@@ -140,6 +140,9 @@ dmypy.json
 *.fasta
 *.fa
 *.FASTA
+*.npy
+*.pdb
+*.zip
 *.cma
 PF*
 *.pdf
@@ -149,4 +152,3 @@ hiMSA/
 protein_data/data_processing_output/*
 protein_data/pdb_data/*
 
->>>>>>> 783e72ee2a663acbb5da20ebd817d97d84a7439b
