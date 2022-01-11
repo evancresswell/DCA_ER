@@ -63,6 +63,7 @@ WORKDIR /home/
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 ENV PATH /opt/conda/bin:$PATH
 
+# My DCA_ER code on github has pydca as a submodule
 RUN git clone --recurse-submodules https://github.com/evancresswell/DCA_ER.git
 
 # RUN source /opt/conda/etc/profile.d/conda.sh
