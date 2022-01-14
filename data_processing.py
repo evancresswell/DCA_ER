@@ -7,29 +7,29 @@ import pickle
 # from scipy.stats import itemfreq #removed due to warning
 import os, sys
 
-"""
-seq_file = 'fasta_final.txt'
-
-#amino_acids = ['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S',\
+#"""
+#seq_file = 'fasta_final.txt'
+#
+##amino_acids = ['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S',\
 #    'T','V','W','Y']
 
 # B: Asparagine (N) or Aspartic (D)
 # Z: glutamine (Q) or glutamic (E)
 # X: unknown (can be any animo acid)
 
-def read_seq_file(seq_file):
-    seq = []
-    with open(seq_file,'r') as seq_file:
-        for i,line in enumerate(seq_file):
-            seq.append(line.rstrip('\n'))
-    
-    l,n = len(seq),len(seq[0])
-    
-    seq = np.array([seq[t][i] for t in range(l) for i in range(n)]).reshape((l,n))
-    #np.savetxt('seq.txt',seq,fmt='%s',delimiter='')
-    
-    return seq
-"""
+#def read_seq_file(seq_file):
+#    seq = []
+#    with open(seq_file,'r') as seq_file:
+#        for i,line in enumerate(seq_file):
+#            seq.append(line.rstrip('\n'))
+#    
+#    l,n = len(seq),len(seq[0])
+#    
+#    seq = np.array([seq[t][i] for t in range(l) for i in range(n)]).reshape((l,n))
+#    #np.savetxt('seq.txt',seq,fmt='%s',delimiter='')
+#    
+#    return seq
+#"""
 
 
 # =========================================================================================#
@@ -136,7 +136,8 @@ def covert_letter2number(s):
     # ,'B':20, 'Z':21, 'X':22}
 
     l, n = s.shape
-    return np.array([letter2number[s[t, i]] for t in range(l) for i in range(n)]).reshape(l, n)
+    # making sure all amino acids are uppercase # # this is done in PYDCA as well. though there are references that say lowercase means no-good
+    return np.array([letter2number[s[t, i].upper()] for t in range(l) for i in range(n)]).reshape(l, n)
 
 
 # ------------------------------
@@ -379,6 +380,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     # s = np.load('../%s/msa.npy'%pfam_id).T
     s = load_msa(data_path, pfam_id)
     orig_seq_len = s.shape[1]
+    print('Original Sequence length: ', orig_seq_len)
 
 
     # print('select only column presenting as uppercase at PDB sequence')
@@ -436,11 +438,14 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
         s_no_dup = []
         for i, row in enumerate(s):
             if [a for a in row] in s_no_dup:
-                dup_rows.append(i)
+                if i != tpdb: 	# do not want to remove reference sequence
+                    dup_rows.append(i)
+                else:    	# we need to add the reference sequence back in even if its a duplicate row.	
+                    s_no_dup.append([a for a in row])
             else:
                 s_no_dup.append([a for a in row])
         if printing:
-            print('found and removed %d duplicates!' % len(dup_rows))
+            print('found %d duplicates! (Removing...)' % len(dup_rows))
         s, tpdb = remove_seqs_list(s, tpdb, dup_rows)
     # -------------------------------------------------------------- #
 

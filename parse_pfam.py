@@ -6,21 +6,22 @@ from Bio import AlignIO
 import os, urllib.request, gzip, re
 
 
-def parse_pfam(data_dir='./'):
+def parse_pfam(data_dir='./', download=True):
 
-    # download pfam files from database ftp
-    # ftp faq: https://pfam.xfam.org/help#tabview=tab13
-    pfam_current_release = 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release'
-
-    files = [
-        'Pfam-A.full.gz',  # The full alignments of the curated families (~6GB)
-        # 'pdbmap.gz',  # Mapping between PDB structures and Pfam domains. (~2MB)
-    ]
-    for f in files:
-        local = os.path.join(data_dir, f)
-        if not os.path.exists(local):
-            remote = os.path.join(pfam_current_release, f)
-            urllib.request.urlretrieve(remote, local)
+    if download:
+        # download pfam files from database ftp
+        # ftp faq: https://pfam.xfam.org/help#tabview=tab13
+        pfam_current_release = 'ftp://ftp.ebi.ac.uk/pub/databases/Pfam/current_release'
+    
+        files = [
+            'Pfam-A.full.gz',  # The full alignments of the curated families (~6GB)
+            # 'pdbmap.gz',  # Mapping between PDB structures and Pfam domains. (~2MB)
+        ]
+        for f in files:
+            local = os.path.join(data_dir, f)
+            if not os.path.exists(local):
+                remote = os.path.join(pfam_current_release, f)
+                urllib.request.urlretrieve(remote, local)
 
     # get list of
     # 0) accession codes,

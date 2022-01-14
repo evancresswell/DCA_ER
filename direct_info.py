@@ -52,7 +52,7 @@ def direct_info_value(w2d,fi,q,i1i2):
 
     for i in range(n-1):
         i1,i2 = i1i2[i,0],i1i2[i,1]
-        for j in range(i+1,n):
+        for j in range(i+1,n): 
             j1,j2 = i1i2[j,0],i1i2[j,1]
             #ew = ew_all[i,j,:q[i],:q[j]]
             ew = ew_all[i1:i2,j1:j2]
@@ -68,7 +68,7 @@ def direct_info_value(w2d,fi,q,i1i2):
             #fj0 = fi[j,0:q[j]]
             fi0 = fi[i1:i2]
             fj0 = fi[j1:j2]
-                
+            
             for iloop in range(100):
                 eh_ew1 = eh2.dot(ew.T)
                 eh_ew2 = eh1.dot(ew)
