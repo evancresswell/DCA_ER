@@ -88,6 +88,8 @@ for i, seq in enumerate(s):
     seq_str = ""
     for a in seq:
         seq_str += a
+    print(seq_str)
+    print(pydca_refseq)
     if seq_str == pydca_refseq:
         sbm_tpdb = i
         npy_refseq = seq

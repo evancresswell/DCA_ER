@@ -1,17 +1,20 @@
 from numba import prange as parallel_range
 import numpy as np
 import sys, os, errno
+import pandas as pd
 # Import Bio data processing features 
 from Bio import SeqIO
 import Bio.PDB, warnings
 from Bio.PDB import *
 from scipy.spatial import distance_matrix
 from Bio import BiopythonWarning
+from Bio import pairwise2
+from Bio.SubsMat.MatrixInfo import blosum62
 from matplotlib import colors as mpl_colors
 import random
 import xml.etree.ElementTree as et
 from pathlib import Path
-from data_processing import data_processing
+from data_processing import data_processing, find_and_replace
 
 warnings.filterwarnings("error")
 warnings.simplefilter('ignore', BiopythonWarning)
@@ -22,9 +25,112 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 pdb_list = Bio.PDB.PDBList()
 pdb_parser = Bio.PDB.PDBParser()
 
+letter2number = {'A': 0, 'C': 1, 'D': 2, 'E': 3, 'F': 4, 'G': 5, 'H': 6, 'I': 7, 'K': 8, 'L': 9, \
+                     'M': 10, 'N': 11, 'P': 12, 'Q': 13, 'R': 14, 'S': 15, 'T': 16, 'V': 17, 'W': 18, 'Y': 19, '-': 20,
+                     'U': 21}
+    # ,'B':20, 'Z':21, 'X':22}
+number2letter = {0: 'A', 1: 'C', 2: 'D', 3: 'E', 4: 'F', 5: 'G', 6: 'H', 7: 'I', 8: 'K', 9: 'L', \
+                     10: 'M', 11: 'N', 12: 'P', 13: 'Q', 14: 'R', 15: 'S', 16: 'T', 17: 'V', 18: 'W', 19: 'Y', 20: '-',
+                     21: 'U'}
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # -------------------------------------------------------------------------------------------------------------------- #
+
+def align_pairs_local(ref_seq, other_seq, score_only = False):
+    """Performs pairwise alignment give two sequences
+
+    Parameters
+    ----------
+        ref_seq : str
+            Reference sequence
+        other_seq : str
+            Sequence to be aligned to reference
+        biomolecule : str
+            Sequences type, protein or RNA
+
+    Returns
+    -------
+        alignments : tuple
+            A tuple of pairwise aligned sequences, alignment score and
+            start and end indices of alignment
+    """
+    scoring_mat = blosum62
+    GAP_OPEN_PEN = -10
+    GAP_EXTEND_PEN = -1
+    alignments = pairwise2.align.localds(
+        ref_seq,
+        other_seq,
+        scoring_mat,
+        GAP_OPEN_PEN,
+        GAP_EXTEND_PEN,
+        score_only = score_only,
+    )
+
+    return alignments
+
+
+def find_matching_seqs_from_alignment(sequences, ref_sequence):
+    """Finds the best matching sequences to the reference
+    sequence in the alignment. If multiple matching sequences
+    are found, the first one (according to the order in the MSA)
+    is taken
+
+    Parameters
+    ----------
+	sequence : 
+		npy array of arraysof letters/numbers (multiple sequence alignment)
+		DO NOT NEED TO BE ALIGNED
+	ref_sequence : 
+		npy array of letters/numbers (reference sequence)
+    Returns
+    -------
+        best_matching_seqs : list
+            A list of best matching sequences to reference
+    """
+
+    # if the first sequence (gaps removed) in MSA matches with reference,
+    # return this sequence.
+    first_seq_in_alignment = sequences[0] 
+    #first_seq_in_alignment_gaps_removed = first_seq_in_alignment.replace('-','')
+    first_seq_in_alignment_gaps_removed = find_and_replace(first_seq_in_alignment, '-','')
+    if first_seq_in_alignment_gaps_removed == ref_sequence:
+        print('\n\tFirst sequence in alignment (gaps removed) matches reference,'
+            '\n\tSkipping regorous search for matching sequence'
+        )
+        first_seq = list()
+        first_seq.append(first_seq_in_alignment)
+        return first_seq
+    pairwise_scores = []
+    for seq_indx, seq in enumerate(sequences):
+        #seq_gaps_removed = seq.replace('-','')
+        seq_gaps_removed = find_and_replace(seq, '-', '')
+        print(seqs_gaps_removed)
+
+        score = align_pairs_local(
+            ref_sequence,
+            seq_gaps_removed,
+            score_only = True,
+            )
+        score_at_indx = (seq_indx, score)
+        pairwise_scores.append(score_at_indx)
+
+    seq_indx, max_score = max(pairwise_scores, key=lambda x: x[1])
+    matching_seqs_indx = [
+        indx  for indx, score in pairwise_scores if score == max_score
+    ]
+
+    best_matching_seqs = [
+        sequences[indx] for indx in matching_seqs_indx
+    ]
+    num_matching_seqs = len(best_matching_seqs)
+    if num_matching_seqs > 1 :
+        print('\n\tFound %d sequences in MSA that match the reference'
+            '\n\tThe first sequence is taken as matching'% num_matching_seqs
+        )
+    return best_matching_seqs
+
+
+
 def scores_matrix2dict(scores_matrix, s_index):
     """
     # This functions converts the matrix of ER dca scores to the pydca-format dictionary (with 2 int index tuple as keys) 
@@ -79,7 +185,7 @@ def score_APC(scores_matrix, N, s_index):
 # -------------------------------------------------------------------------------------------------------------------- #
 
 
-def di_dict2mat(pydca_score, s_index, cols_removed = None, full_contact=False, aa_index_correction=True):
+def di_dict2mat(pydca_score, s_index, curated_cols = None, full_contact=False, aa_index_correction=True, cols_removed=False):
     # This functions converts the dictionary (with 2 int index tuple as keys) of pydca scores to a di matrix which
     #   incorporates the removed columns during pre-processing (cols_removed) resulting in a pydca di matrix with
     #   correct dimensions
@@ -97,8 +203,15 @@ def di_dict2mat(pydca_score, s_index, cols_removed = None, full_contact=False, a
         # ijs.append(i)
         # ijs.append(j)
         if aa_index_correction:
-            pydca_di[i-1, j-1] = score
-            pydca_di[j-1, i-1] = score
+            if cols_removed:
+                ii = np.where(s_index==i-1)[0][0]
+                jj = np.where(s_index==j-1)[0][0]
+                pydca_di[ii, jj] = score
+                pydca_di[jj, ii] = score
+            else:
+                pydca_di[i-1, j-1] = score
+                pydca_di[j-1, i-1] = score
+
         else:
             pydca_di[i, j] = score
             pydca_di[j, i] = score
@@ -126,7 +239,7 @@ def npy2fa(pfam_id, npy_infile, pdb_ref_file, ipdb, preprocess=False, gap_seqs=.
     if preprocess:
         # data processing -- SPECIFICALLY we want to remove conserved columns from reference sequence so that pydca trims them
         s,cols_removed, s_index, tpdb, orig_seq_len = data_processing(msa_dir.parent, pfam_id, ipdb,
-                gap_seqs=gap_seqs, gap_cols=gap_cols, prob_low=prob_low, conserved_cols=conserved_cols, printing=False, out_dir=msa_dir, letter_format=letter_format, remove_cols=False) # we want S to have amino acid letters and we want the full msa so we can replace removed_cols with '-' gaps
+                gap_seqs=gap_seqs, gap_cols=gap_cols, prob_low=prob_low, conserved_cols=conserved_cols, printing=True, out_dir=msa_dir, letter_format=letter_format, remove_cols=False) # we want S to have amino acid letters and we want the full msa so we can replace removed_cols with '-' gaps
         print('s after data_processing: ', s.shape)
         temp_ref = np.copy(s[tpdb,:])
         for col in cols_removed:
@@ -221,6 +334,12 @@ def npy2fa(pfam_id, npy_infile, pdb_ref_file, ipdb, preprocess=False, gap_seqs=.
         # Return MSA and Reference FASTA file names
         return msa_outfile, ref_outfile, s
     else:
+        if not letter_format:
+            print("In tools Processing Final Reference Sequence (shape=", s[tpdb].shape, "): \n", [number2letter[a] for a in s[tpdb]])
+        else:
+            print("In tools Final Reference Sequence (shape=", s[tpdb].shape, "): \n", s[tpdb])
+
+
         return msa_outfile, ref_outfile, s, cols_removed, s_index, tpdb, orig_seq_len 
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -429,11 +548,86 @@ def get_PFAM_PDB_map(pdb_id, pdb_out_dir='./'):
         print()
     """
 
+def find_best_pdb(pfam_id, data_path, create_new=True):
+    from IPython.display import HTML
 
-def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printing=True, pdb_out_dir='./'):
+    # Import from local directory
+    # import sys
+    # sys.path.insert(0, '../pypdb')
+    # from pypdb import *
+
+    # Import from installed package
+    from pypdb import Query
+    from data_processing import load_msa
+    if not create_new and os.path.exists('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id)):
+        # if the query has already been done, load the raw query dataframe
+        pdb_refs_ecc  = pd.read_pickle('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id))
+    else:
+        msa = load_msa(data_path, pfam_id)
+        pdb_matches = {}
+        print('Finding best PDB match for (Searching %d sequences)' % len(msa), pfam_id)
+        for i, seq in enumerate(msa):
+            try:
+                gap_seq = seq == '-'  # returns True/False for gaps/no gaps
+                subject = seq[~gap_seq]
+                seq_str = ''.join(subject)
+                q = Query(seq_str.upper(),
+                  query_type="sequence",
+                  return_type="polymer_entity")
+                search_results = q.search()
+            
+            
+                # print(search_results)
+                # print('sequence %d: ' % i, search_results['result_set'][0]['identifier'])
+                
+                # parse BLAST PDB search results
+                pdb_id = search_results['result_set'][0]['identifier']
+                score = search_results['result_set'][0]['score']
+                
+                match_dict = search_results['result_set'][0]['services'][0]['nodes'][0]['match_context'][0]
+                identity = match_dict['sequence_identity']
+                e_value = match_dict['evalue']
+                bitscore = match_dict['bitscore']
+                alignment_length = match_dict['alignment_length']
+                mismatches = match_dict['mismatches']
+                gaps_open = match_dict['gaps_opened']
+                query_beg = match_dict['query_beg']
+                query_end = match_dict['query_end']
+                subject_beg = match_dict['subject_beg']
+                subject_end = match_dict['subject_end']
+                query_len = match_dict['query_length']
+                subject_len = match_dict['subject_length']
+                query_aligned_seq = match_dict['query_aligned_seq']
+                subject_aligned_seq = match_dict['subject_aligned_seq']
+                
+                pdb_matches[i] = [i, pdb_id, score, identity, e_value, bitscore, alignment_length, mismatches, gaps_open, \
+                                  query_beg, query_end, subject_beg, subject_end, query_len, subject_len, \
+                                  query_aligned_seq, subject_aligned_seq]
+                
+            except(UserWarning):
+                print('bad query')
+                
+        # Convert to DataFrame and sort.
+        columns = ['MSA Index', 'PDB ID', 'Score', 'Identity', 'E-value', 'Bitscore', 'Alignment Length', 'Mismatches', 'Gaps Opened', \
+                                      'Query Beg', 'Query End', 'Subject Beg', 'Subject End', 'Query Len', 'Subject Len', \
+                                      'Query Aligned Seq', 'Subject Aligned Seq']
+    
+        pdb_refs_ecc = pd.DataFrame.from_dict(pdb_matches, orient='index', columns=columns)
+        pdb_refs_ecc.to_pickle('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id))
+
+    print('Raw-Query PDB dataframe gives %d matches... \n' % len(pdb_refs_ecc))
+    pdb_sorted = pdb_refs_ecc.loc[pdb_refs_ecc['Gaps Opened']==0]
+    pdb_sorted = pdb_sorted.sort_values(by=['Identity', 'Score', 'Bitscore'], ascending = False).sort_values(by='E-value')
+    pdb_sorted = pdb_sorted.reset_index(drop=True)
+    print('Sorted PDB matches (%d matches): \n' % len(pdb_sorted), pdb_sorted)
+    return pdb_sorted
+
+def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printing=True, pdb_out_dir='./', refseq=None):
     if printing:
         print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
-        print(pdb[ipdb, :])
+
+    print('Checking %d PDB sequence for best match to reference sequence' % pdb.shape[0])
+    print(pdb[ipdb, :])
     pdb_id = pdb[ipdb, 5]
     pdb_chain = pdb[ipdb, 6]
     # pdb_start,pdb_end = int(pdb[ipdb,6])-1,int(pdb[ipdb,8])-1 # -1 due to array-indexing
@@ -457,7 +651,7 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printi
     coords_all = np.array([a.get_coord() for a in chain.get_atoms()])
     ca_residues = np.array([a.get_name() == 'CA' for a in chain.get_atoms()])
     ca_coords = coords_all[ca_residues]
-    in_range_ca_coords = ca_coords[pdb_start:pdb_end]
+    in_range_ca_coords = ca_coords[pdb_start:pdb_end+1] ## change 1/18/22 ecc
     n_amino = len(in_range_ca_coords)
 
     ppb = PPBuilder().build_peptides(chain)
@@ -496,6 +690,7 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printi
     poly_seq_curated = np.delete(poly_seq_range, cols_removed)
     pp_ca_coords_curated = np.delete(pp_ca_coords_full_range, cols_removed, axis=0)
 
+    
     if printing:
         print('Sequence inside given PDB range (poly_seq_range) with columns removed: (poly_seq_range_curated): \n',
               poly_seq_curated, '\n length: ', len(poly_seq_curated))
@@ -524,7 +719,7 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printi
         print(coords_remain.shape)
         print('\n\n#-----------------------#\nContact Map Generated \n#----------------------------#\n')
 
-    return ct, ct_full, n_amino_full, poly_seq_curated
+    return ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range
 
 
 def roc_curve(ct, di, ct_thres):

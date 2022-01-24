@@ -503,7 +503,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
 
     removed_cols = np.array(list(set(removed_cols) | set(lower_cols)))
     if printing:
-        print("We remove conserved and bad columns with, at the following indices:\n", removed_cols)
+        print("We remove conserved and bad columns with, at the following indices (len %d):\n" % len(removed_cols), removed_cols)
 
 
     # info still pased through removed_cols but this way we can interact with full msa if remove_cols is False
@@ -550,6 +550,11 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     # mi = number_residues(s)
     # print(mi.mean())
     np.save("%s/%s_removed_cols.npy" % (out_dir, pfam_id), removed_cols)
+
+    # - Removing bad sequences (>gap_seqs gaps) -------------------- #
+    if printing:
+        print(s.shape)
+        print("In Data Processing Final Reference Sequence (shape=", s[tpdb].shape, "): \n", convert_number2letter(s[tpdb]))
 
     return s, removed_cols, s_index, tpdb, orig_seq_len
 

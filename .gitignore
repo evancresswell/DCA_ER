@@ -6,6 +6,7 @@ Pfam-A.full/
 *.npy
 *.o
 *.e
+*.ent
 
 
 # C extensions
