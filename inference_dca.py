@@ -9,7 +9,7 @@ import os, sys
 #s0 = np.loadtxt('data_processed/%s_s0.txt'%(pfam_id)).astype(int)
 
 # pydca implementation to compute sequences weight (for use in calculation of M_effective)
-def compute_sequences_weight(alignment_data, seqid, outfile=None):
+def compute_sequences_weight(alignment_data, seqid, outfile=None, create_new = False):
     """Computes weight of sequences. The weights are calculated by lumping
     together sequences whose identity is greater that a particular threshold.
     For example, if there are m similar sequences, each of them will be assigned
@@ -31,7 +31,7 @@ def compute_sequences_weight(alignment_data, seqid, outfile=None):
             A 1d numpy array containing computed weights. This array has a size
             of the number of sequences in the alignment data.
     """
-    if os.path.exists(outfile) and outfile is not None:
+    if os.path.exists(outfile) and outfile is not None and not create_new:
         seqs_weight = np.load(outfile)
     else:
         alignment_shape = alignment_data.shape
@@ -78,15 +78,26 @@ def frequency(s0,q,theta,pseudo_weight, seq_weight_outfile=None,first10=False):
 
     # pydca             -- sequences weight calculation
     if seq_weight_outfile is not None:
-        seqs_weight = compute_sequences_weight(alignment_data = s0, seqid = float(1.-theta), outfile=seq_weight_outfile)
-        meff = np.sum(seqs_weight)
-        fi_pydca = np.zeros((l, q))
-
-        for i in range(l):
-            for a in range(q):#we need gap states single site freqs too
-                column_i = s0[:,i]
-                freq_ia = np.sum((column_i==a)*seqs_weight)
-                fi_pydca[i, a-1] = freq_ia/meff
+        try:
+            seqs_weight = compute_sequences_weight(alignment_data = s0, seqid = float(1.-theta), outfile=seq_weight_outfile)
+            meff = np.sum(seqs_weight)
+            fi_pydca = np.zeros((l, q))
+    
+            for i in range(l):
+                for a in range(q):#we need gap states single site freqs too
+                    column_i = s0[:,i]
+                    freq_ia = np.sum((column_i==a)*seqs_weight)
+                    fi_pydca[i, a-1] = freq_ia/meff
+        except(ValueError): # likely from compute_sequences_weight loading an incorrect/old sequence weight file. 
+            seqs_weight = compute_sequences_weight(alignment_data = s0, seqid = float(1.-theta), outfile=seq_weight_outfile, create_new=True)
+            meff = np.sum(seqs_weight)
+            fi_pydca = np.zeros((l, q))
+    
+            for i in range(l):
+                for a in range(q):#we need gap states single site freqs too
+                    column_i = s0[:,i]
+                    freq_ia = np.sum((column_i==a)*seqs_weight)
+                    fi_pydca[i, a-1] = freq_ia/meff
 
         # print('fi_pydca.shape: ', fi_pydca.shape)
 
@@ -344,7 +355,8 @@ def direct_info_dca(s0,q=21,theta=0.2,pseudo_weight=0.5, seq_wt_outfile=None, fi
     #np.savetxt('w2d.dat',w2d,fmt='%f') # 2d
 
     di = direct_info(w,fi,q,l)
-    di_pydca = direct_info(w_pydca,fi_pydca,q,l)
+    #di_pydca = direct_info(w_pydca,fi_pydca,q,l)
+    di_pydca = 'Useless'
     
     return di, fi, fij, c, c_inv, w, w2d, reg_fi_pydca, reg_fij_pydca, c_pydca, c_inv_pydca, w_pydca, w2d_pydca, di_pydca, ma_inv,seq_ints
 

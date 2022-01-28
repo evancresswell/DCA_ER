@@ -89,8 +89,6 @@ np.save('%s/%s_ER_tpdb.npy' 		% (processed_data_dir, pfam_id), tpdb)
 np.save('%s/%s_ER_original_seq_len.npy' % (processed_data_dir, pfam_id), orig_seq_len)
 
 # data processing
-#print(s0[1934])
-#print(s0[3522])
 print(s0.shape, '\n\n\n')
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #

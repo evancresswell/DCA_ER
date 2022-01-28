@@ -548,79 +548,129 @@ def get_PFAM_PDB_map(pdb_id, pdb_out_dir='./'):
         print()
     """
 
-def find_best_pdb(pfam_id, data_path, create_new=True):
-    from IPython.display import HTML
 
-    # Import from local directory
-    # import sys
-    # sys.path.insert(0, '../pypdb')
-    # from pypdb import *
 
-    # Import from installed package
-    from pypdb import Query
-    from data_processing import load_msa
-    if not create_new and os.path.exists('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id)):
-        # if the query has already been done, load the raw query dataframe
-        pdb_refs_ecc  = pd.read_pickle('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id))
-    else:
-        msa = load_msa(data_path, pfam_id)
-        pdb_matches = {}
-        print('Finding best PDB match for (Searching %d sequences)' % len(msa), pfam_id)
-        for i, seq in enumerate(msa):
-            try:
-                gap_seq = seq == '-'  # returns True/False for gaps/no gaps
-                subject = seq[~gap_seq]
-                seq_str = ''.join(subject)
-                q = Query(seq_str.upper(),
-                  query_type="sequence",
-                  return_type="polymer_entity")
-                search_results = q.search()
+def contact_map_new(pdb_id, pdb_range, removed_cols, queried_seq, pdb_out_dir='./', printing=True):
+    if printing:
+        print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
+
+    pdb_file = pdb_list.retrieve_pdb_file(str(pdb_id), file_format='pdb', pdir=pdb_out_dir)
+    # pdb_file = pdb_list.retrieve_pdb_file(pdb_id)
+
+    pdb_start = pdb_range[0] - 2
+    pdb_end = pdb_range[1] - 1
+
+    pdb_model = pdb_parser.get_structure(str(pdb_id), pdb_file)[0]
+    found_pp_match = False
+    for chain in pdb_model.get_chains():
+        ppb = PPBuilder().build_peptides(chain)
+
+        # Get full list of CA coords from poly_seq
+        poly_seq = list() 
+        pp_ca_coords_full = list()
+        for i, pp in enumerate(ppb):
+            for char in str(pp.get_sequence()):
+                poly_seq.append(char)
+            poly_seq_ca_atoms = pp.get_ca_list()
+            pp_ca_coords_full.extend([a.get_coord() for a in poly_seq_ca_atoms])      
             
-            
-                # print(search_results)
-                # print('sequence %d: ' % i, search_results['result_set'][0]['identifier'])
-                
-                # parse BLAST PDB search results
-                pdb_id = search_results['result_set'][0]['identifier']
-                score = search_results['result_set'][0]['score']
-                
-                match_dict = search_results['result_set'][0]['services'][0]['nodes'][0]['match_context'][0]
-                identity = match_dict['sequence_identity']
-                e_value = match_dict['evalue']
-                bitscore = match_dict['bitscore']
-                alignment_length = match_dict['alignment_length']
-                mismatches = match_dict['mismatches']
-                gaps_open = match_dict['gaps_opened']
-                query_beg = match_dict['query_beg']
-                query_end = match_dict['query_end']
-                subject_beg = match_dict['subject_beg']
-                subject_end = match_dict['subject_end']
-                query_len = match_dict['query_length']
-                subject_len = match_dict['subject_length']
-                query_aligned_seq = match_dict['query_aligned_seq']
-                subject_aligned_seq = match_dict['subject_aligned_seq']
-                
-                pdb_matches[i] = [i, pdb_id, score, identity, e_value, bitscore, alignment_length, mismatches, gaps_open, \
-                                  query_beg, query_end, subject_beg, subject_end, query_len, subject_len, \
-                                  query_aligned_seq, subject_aligned_seq]
-                
-            except(UserWarning):
-                print('bad query')
-                
-        # Convert to DataFrame and sort.
-        columns = ['MSA Index', 'PDB ID', 'Score', 'Identity', 'E-value', 'Bitscore', 'Alignment Length', 'Mismatches', 'Gaps Opened', \
-                                      'Query Beg', 'Query End', 'Subject Beg', 'Subject End', 'Query Len', 'Subject Len', \
-                                      'Query Aligned Seq', 'Subject Aligned Seq']
+        str_index = ''.join(poly_seq).find(queried_seq)
+        if str_index == -1:
+            continue
+        else:
+            found_pp_match = True
+            pdb_start = str_index
+            pdb_end = str_index + len(queried_seq)
+            poly_seq_range = poly_seq[pdb_start:pdb_end]
+            print('Found Match!\n')
+            print(''.join(poly_seq_range))
+            print(queried_seq)
+            break
+
+    if not found_pp_match:
+        print(''.join(poly_seq_range))
+        print(len(poly_seq_range))
+        print(queried_seq)
+        print(len(queried_seq))
+        print('ERROR: downloaded pdb sequence does not match the returned sequence from the query')
+        sys.exit()
     
-        pdb_refs_ecc = pd.DataFrame.from_dict(pdb_matches, orient='index', columns=columns)
-        pdb_refs_ecc.to_pickle('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id))
+    pdb_chain = chain.get_id()
+    n_amino_full = len(pp_ca_coords_full)
 
-    print('Raw-Query PDB dataframe gives %d matches... \n' % len(pdb_refs_ecc))
-    pdb_sorted = pdb_refs_ecc.loc[pdb_refs_ecc['Gaps Opened']==0]
-    pdb_sorted = pdb_sorted.sort_values(by=['Identity', 'Score', 'Bitscore'], ascending = False).sort_values(by='E-value')
-    pdb_sorted = pdb_sorted.reset_index(drop=True)
-    print('Sorted PDB matches (%d matches): \n' % len(pdb_sorted), pdb_sorted)
-    return pdb_sorted
+    # Extract coordinates and sequence char in PDB-range\
+    pp_ca_coords_full_range = pp_ca_coords_full[pdb_start:pdb_end]
+
+    ct_full = distance_matrix(pp_ca_coords_full, pp_ca_coords_full)
+
+
+
+    poly_seq_curated = np.delete(poly_seq_range, removed_cols)
+    pp_ca_coords_curated = np.delete(pp_ca_coords_full_range, removed_cols, axis=0)
+    ct = distance_matrix(pp_ca_coords_curated, pp_ca_coords_curated)
+
+    return pdb_chain, ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range, poly_seq, pp_ca_coords_curated, pp_ca_coords_full_range
+
+def di_dict2mat(pydca_score, s_index, curated_cols = None, full_contact=False, aa_index_correction=True, removing_cols=False):
+    # This functions converts the dictionary (with 2 int index tuple as keys) of pydca scores to a di matrix which
+    #   incorporates the removed columns during pre-processing (cols_removed) resulting in a pydca di matrix with
+    #   correct dimensions
+    #for pair, score in pydca_score:                                                                     
+    #    print(pair, score)
+
+    if full_contact:
+        column_count = len(s_index) + len(cols_removed)                                                  
+    else:
+        column_count = len(s_index)                                                                      
+    
+    pydca_di = np.zeros((column_count, column_count))
+    # ijs = []                                                                                           
+    for [(i, j), score] in pydca_score:                                                                  
+        # ijs.append(i)                                                                                  
+        # ijs.append(j)
+        if aa_index_correction:                                                                          
+            if removing_cols:
+                if i-1 in s_index and j-1 in s_index:
+                    ii = np.where(s_index==i-1)[0][0]                                                        
+                    jj = np.where(s_index==j-1)[0][0]  
+                    pydca_di[ii, jj] = score                                                                 
+                    pydca_di[jj, ii] = score                                                                 
+            else:
+                pydca_di[i-1, j-1] = score
+                pydca_di[j-1, i-1] = score                                                               
+                
+        else:
+            pydca_di[i, j] = score 
+            pydca_di[j, i] = score 
+                                                                                                         
+    # print('max index: ', max(ijs))                                                                     
+    print('DI shape (full size)' , pydca_di.shape)
+    if curated_cols is not None and not removing_cols:   # have we curated (set to gap instead of removed) 
+                                                        # but not removed columns?
+        # trim the columns removed during the pre-processing for ER                                      
+        pydca_di = np.delete(pydca_di, curated_cols, 0)                                                  
+        pydca_di = np.delete(pydca_di, curated_cols, 1)                                                  
+    print('DI shape (scores removed)', pydca_di.shape,'\n(should be same as ER di shape..)')             
+        
+    return pydca_di
+
+# print("Direct Information from Expectation reflection:\n",di)
+def no_diag(mat, diag_l, s_index=None, make_big=False):
+    rows, columns = mat.shape
+    if make_big:
+        new_mat = 100. * np.ones((rows,columns))
+    else:
+        new_mat = np.zeros((rows,columns))
+    for row in range(rows):
+        for col in range(columns):
+            if s_index is None:
+                if abs(row-col) > diag_l:
+                    new_mat[row, col] = mat[row ,col]
+            else:
+                if abs(s_index[row]-s_index[col]) > diag_l:
+                    new_mat[row, col] = mat[row ,col]    
+    return new_mat
+
 
 def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printing=True, pdb_out_dir='./', refseq=None):
     if printing:
