@@ -15,6 +15,8 @@ import random
 import xml.etree.ElementTree as et
 from pathlib import Path
 from data_processing import data_processing, find_and_replace
+from sklearn.metrics import roc_curve as roc_scikit
+from sklearn.metrics import auc, precision_recall_curve
 
 warnings.filterwarnings("error")
 warnings.simplefilter('ignore', BiopythonWarning)
@@ -131,20 +133,22 @@ def find_matching_seqs_from_alignment(sequences, ref_sequence):
 
 
 
-def scores_matrix2dict(scores_matrix, s_index):
+def scores_matrix2dict(scores_matrix, s_index, curated_cols, removing_cols=False):
     """
     # This functions converts the matrix of ER dca scores to the pydca-format dictionary (with 2 int index tuple as keys) 
     #   incorporates the removed columns during pre-processing (cols_removed) resulting in a pydca di matrix with
     #   correct dimensions
     """
     scores = []
-    print(s_index)
+    if not removing_cols:
+        s_index = np.delete(s_index, curated_cols)
     for i in range(len(s_index)):
         for j in range(i+1, len(s_index)):
             # print(s_index[i],s_index[j])
-            scores.append(((s_index[i], s_index[j]), scores_matrix[i,j]))
+            scores.append([(s_index[i], s_index[j]), scores_matrix[i,j]])
 
-    return scores
+    sorted_scores = sorted(scores, key = lambda k : k[1], reverse=True)
+    return sorted_scores
    
 # -------------------------------------------------------------------------------------------------------------------- #
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -772,6 +776,57 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printi
     return ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range
 
 
+def roc_curve_new(ct, di, ct_thres):
+    """
+    ct: n x n matrix of True/False for contact
+
+    di: n x n matrix of coupling info where n is number of positions with contact predictions
+
+    ct_trhes:  distance for contact threshold
+    """
+    ct1 = ct.copy()
+
+    ct_pos = ct1 < ct_thres
+    ct1[ct_pos] = 1
+    ct1[~ct_pos] = 0
+
+    mask = np.triu(np.ones(di.shape[0], dtype=bool), k=1)
+    # argsort sorts from low to high. [::-1] reverses 
+    order = di[mask].argsort()[::-1]
+    ct_flat = ct1[mask][order]
+    # print("ct_flat dimensions: ", np.shape(ct_flat))
+    # print(di[mask][order][:50])
+    # print(ct_flat[:50])
+    fpr, tpr, thresholds = roc_scikit(ct_flat, di[mask][order])
+    roc_auc= auc(fpr, tpr)
+    print('ct thresh %f gives auc = %f' % (ct_thres, roc_auc))
+    return fpr, tpr, thresholds, roc_auc
+
+def precision_curve(ct, di, ct_thres):
+    """
+    ct: n x n matrix of True/False for contact
+
+    di: n x n matrix of coupling info where n is number of positions with contact predictions
+
+    ct_trhes:  distance for contact threshold
+    """
+    ct1 = ct.copy()
+
+    ct_pos = ct1 < ct_thres
+    ct1[ct_pos] = 1
+    ct1[~ct_pos] = 0
+
+    mask = np.triu(np.ones(di.shape[0], dtype=bool), k=1)
+    # argsort sorts from low to high. [::-1] reverses 
+    order = di[mask].argsort()[::-1]
+    ct_flat = ct1[mask][order]
+    # print("ct_flat dimensions: ", np.shape(ct_flat))
+    # print(di[mask][order][:50])
+    # print(ct_flat[:50])
+    precision, recall, thresholds = precision_recall_curve(ct_flat, di[mask][order])
+    return precision, recall, thresholds
+
+ 
 def roc_curve(ct, di, ct_thres):
     """
     ct: n x n matrix of True/False for contact
@@ -789,13 +844,18 @@ def roc_curve(ct, di, ct_thres):
     mask = np.triu(np.ones(di.shape[0], dtype=bool), k=1)
     # argsort sorts from low to high. [::-1] reverses 
     order = di[mask].argsort()[::-1]
-    # print("order dimensions: ", np.shape(order))
+    print("order dimensions: ", np.shape(order))
+    print(order[:50])
     ct_flat = ct1[mask][order]
-    # print("ct_flat dimensions: ", np.shape(ct_flat))
-    # print(di[mask][order][:15])
+    print("ct_flat dimensions: ", np.shape(ct_flat))
+    print(di[mask][order][:50])
+    print(ct_flat[:50])
 
     tp = np.cumsum(ct_flat, dtype=float)
     fp = np.cumsum(~ct_flat.astype(int), dtype=float)
+    print('last tp and fp cumsum vals:')
+    print(tp[-1])
+    print(fp[-1])
 
     if tp[-1] != 0:
         tp /= tp[-1]

@@ -32,7 +32,7 @@ from pathlib import Path
 #    return seq
 #"""
 
-def find_best_pdb(pfam_id, data_path, create_new=True):
+def find_best_pdb(pfam_id, data_path, pdb_dir):
     from IPython.display import HTML
 
     # Import from local directory
@@ -42,12 +42,12 @@ def find_best_pdb(pfam_id, data_path, create_new=True):
 
     # Import from installed package
     from pypdb import Query
-    if not create_new and os.path.exists('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id)):
+    if os.path.exists('%s/%s_pdb_references.pkl' % (pdb_dir, pfam_id)):
         # if the query has already been done, load the raw query dataframe 
         try:
-            pdb_refs_ecc  = pd.read_pickle('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id))
+            pdb_refs_ecc  = pd.read_pickle('%s/%s_pdb_references.pkl' % (pdb_dir, pfam_id))
         except(ValueError): # Most likely unsupported pickle protocol from trying to load up-to-date pickled df with old python version... read csv.
-            pdb_refs_ecc  = pd.read_csv('%s/%s/pdb_references_ecc.csv' % (data_path, pfam_id))
+            pdb_refs_ecc  = pd.read_csv('%s/%s_pdb_references.csv' % (pdb_dir, pfam_id))
     else:
         msa = load_msa(data_path, pfam_id)
         pdb_matches = {}
@@ -99,15 +99,18 @@ def find_best_pdb(pfam_id, data_path, create_new=True):
                                       'Query Aligned Seq', 'Subject Aligned Seq']
     
         pdb_refs_ecc = pd.DataFrame.from_dict(pdb_matches, orient='index', columns=columns)
-        pdb_refs_ecc.to_pickle('%s/%s/pdb_references_ecc.pkl' % (data_path, pfam_id))
-        pdb_refs_ecc.to_csv('%s/%s/pdb_references_ecc.csv' % (data_path, pfam_id))
+        pdb_refs_ecc.to_pickle('%s/%s_pdb_references.pkl' % (pdb_dir, pfam_id))
+        pdb_refs_ecc.to_csv('%s/%s_pdb_references.csv' % (pdb_dir, pfam_id))
 
     print('Raw-Query PDB dataframe gives %d matches... \n' % len(pdb_refs_ecc))
     pdb_sorted = pdb_refs_ecc.loc[pdb_refs_ecc['Gaps Opened']==0]
-    pdb_sorted = pdb_sorted.sort_values(by=['Identity', 'Score', 'Bitscore'], ascending = False).sort_values(by='E-value')
-    pdb_sorted = pdb_sorted.reset_index(drop=True)
-    print('Sorted PDB matches (%d matches): \n' % len(pdb_sorted), pdb_sorted)
-    return pdb_sorted
+    pdb_sorted = pdb_sorted.loc[pdb_sorted['Identity']>.95] 
+    pdb_sorted = pdb_sorted.sort_values(by=['Score', 'Bitscore'], ascending = False).sort_values(by='E-value')
+    pdb_matched = pdb_sorted.loc[pdb_sorted['Alignment Length']==pdb_sorted['Query Len']]
+    pdb_matched_sorted = pdb_matched.sort_values(by=['Alignment Length', 'Bitscore', 'Score'], ascending = False).sort_values(by='E-value')
+    pdb_matched_matched_sorted = pdb_matched_sorted.reset_index(drop=True)
+    print('Sorted PDB matches (%d matches): \n' % len(pdb_matched_sorted), pdb_matched_sorted.head())
+    return pdb_matched_sorted
 
 
 # =========================================================================================#
@@ -230,6 +233,7 @@ def convert_number2letter(s):
         l, n = s.shape
         return np.array([number2letter[s[t, i]] for t in range(l) for i in range(n)]).reshape(l, n)
     except(ValueError):
+        print(s)
         return np.array([number2letter[r] for r in s])
 
 
@@ -453,9 +457,10 @@ def load_msa(data_path, pfam_id):
     return s
 
 def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
-                        conserved_cols=0.8, printing=True, out_dir='./', letter_format=False, 
+                        conserved_cols=0.8, printing=True, out_dir='./', pdb_dir='./', letter_format=False, 
                         remove_cols=True, create_new=True):
     
+    np.random.seed(123456789)
     if not create_new and os.path.exists("%s/%s_pdb_query.npy" % (out_dir, pfam_id)):
         print('Because create_new is False and files exist we will load preprocessed data:')
         if remove_cols:
@@ -470,9 +475,11 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
             removed_cols = np.load("%s/%s_removed_cols.npy" % (out_dir, pfam_id))
             ref_seq = np.load("%s/%s_preproc_allCols_refseq.npy" % (out_dir, pfam_id))
             pdb_seq = np.load("%s/%s_pdb_seq.npy" % (out_dir, pfam_id))
-            pdb_matches = np.load("%s/%s_pdb_query.npy" % (out_dir, pfam_id))
 
-        pdb_matches= find_best_pdb(pfam_id, data_path, create_new=create_new)
+        if not letter_format and isinstance(s[0][0], str):
+            s = convert_letter2number(s)
+
+        pdb_matches= find_best_pdb(pfam_id, data_path, pdb_dir)
        
     
         # --------------------------------------------------------------------------------------------------------- #
@@ -498,14 +505,23 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
 
         
         pdb_select = pdb_reference_matches.iloc[index_pdb]
-        # pdb_select = pdb_reference_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
+        pdb_select = pdb_reference_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
 
         pdb_id = pdb_select['PDB ID']
         original_tpdb = pdb_select['MSA Index']
+        # print(original_tpdb)
+        # print(ref_seq)
         for i, seq in enumerate(s):
-            if ''.join(convert_number2letter(seq)) == ''.join(convert_number2letter(ref_seq)):
-                current_tpdb = i
-                break
+            if not letter_format:
+                # print(i, ''.join(convert_number2letter(seq)).upper())
+                # print(''.join(ref_seq).upper())
+                if ''.join(convert_number2letter(seq)).upper() == ''.join(ref_seq).upper():
+                    current_tpdb = i
+                    break
+            else: 
+                if ''.join(seq) == ''.join(ref_seq):
+                    current_tpdb = i
+                    break
      
         print('Pre-processed MSA (shape:', s.shape, '):')
         print(s)
@@ -528,7 +544,7 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
     if printing:
         print("#\n\n--------------------- Find Matching PDB Strucutre for MSA ----#")
         
-    pdb_matches= find_best_pdb(pfam_id, data_path, create_new=False)
+    pdb_matches= find_best_pdb(pfam_id, data_path, pdb_dir)
 
     
     
@@ -556,7 +572,7 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
     # Since PDB matches are ordered by best matching.. choose first (0th) one ie index_pdb
     pdb_select = pdb_reference_matches.iloc[index_pdb]
 #     # enforce old PDB refs structure for PF00186
-    # pdb_select = pdb_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
+    pdb_select = pdb_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
 
     ref_seq = pdb_select['Query Aligned Seq']
     pdb_seq = pdb_select['Subject Aligned Seq']
@@ -633,6 +649,7 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
         print('found bad columns :=', bad_cols)
     # ------------------------------------------------------ #
 
+    np.save('new_data_processing_s0.npy', s)
     # ------------ Replace Bad Amino Acid Letters if valid ones, two strategies --------- #
     if 1: # replace aa with potential correct aa
         # 2018.12.24:
@@ -649,7 +666,6 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
         amino_acids = np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', \
                                 'T', 'V', 'W', 'Y', 'U'])
         s = find_and_replace(s, 'X', amino_acids)
-        s = find_and_replace(s, 'x', amino_acids)
     else: # replace aa with gap '-' (like in pydca)
         if printing:
             print('\n\nUsing PYDCA\'s method of replacing Z, B, and X with - instead of likely alternates...\n\n')
@@ -660,6 +676,7 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
 
     
     # --------------------- Find Conserved Columns ------------------------------------ #
+    np.save('new_data_processing_s1.npy', s)
     conserved_cols = find_conserved_cols(s, conserved_cols)
     if printing:
         print("found conserved columns (80% repetition):\n", conserved_cols)
@@ -673,8 +690,8 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
     removed_cols = np.array(list(set(removed_cols) | set(lower_cols)))
         
     # remove columns in which references sequence is different from matched PDB sequence
-    mismatch_cols = [i for i,a in enumerate(ref_seq) if a != pdb_seq[i]]
-    removed_cols = np.array(list(set(removed_cols) | set(mismatch_cols)))
+    #mismatch_cols = [i for i,a in enumerate(ref_seq) if a != pdb_seq[i]]
+    #removed_cols = np.array(list(set(removed_cols) | set(mismatch_cols)))
 
     if printing:
         print("We remove conserved and bad columns with, at the following indices (len %d):\n" % len(removed_cols), removed_cols)
@@ -696,6 +713,7 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
     if not letter_format:
         # convert letter to number:
         s = convert_letter2number(s)
+    print(s)
 
     # replace lower probs by higher probs 
     for i in range(s.shape[1]):
@@ -737,6 +755,8 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     # read parse_pfam data:
     # print('read original aligned pfam data')
     # s = np.load('../%s/msa.npy'%pfam_id).T
+
+    np.random.seed(123456789)
     s = load_msa(data_path, pfam_id)
     orig_seq_len = s.shape[1]
     print('Original Sequence length: ', orig_seq_len)
@@ -823,11 +843,11 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
 
 
 
-
     bad_cols = find_bad_cols(s, gap_cols)
     if printing:
         print('found bad columns :=', bad_cols)
 
+    np.save('old_data_processing_s0.npy', s)
     if 1: # replace aa with potential correct aa
         # 2018.12.24:
         # replace 'Z' by 'Q' or 'E' with prob
@@ -850,6 +870,7 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
         s = find_and_replace(s, 'B', np.array(['-']))
         s = find_and_replace(s, 'X', np.array(['-']))
 
+    np.save('old_data_processing_s1.npy', s)
     # remove conserved cols
     conserved_cols = find_conserved_cols(s, conserved_cols)
     if printing:
