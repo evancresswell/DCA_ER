@@ -505,7 +505,7 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
 
         
         pdb_select = pdb_reference_matches.iloc[index_pdb]
-        pdb_select = pdb_reference_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
+       #  pdb_select = pdb_reference_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
 
         pdb_id = pdb_select['PDB ID']
         original_tpdb = pdb_select['MSA Index']
@@ -572,7 +572,7 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
     # Since PDB matches are ordered by best matching.. choose first (0th) one ie index_pdb
     pdb_select = pdb_reference_matches.iloc[index_pdb]
 #     # enforce old PDB refs structure for PF00186
-    pdb_select = pdb_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
+#    pdb_select = pdb_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
 
     ref_seq = pdb_select['Query Aligned Seq']
     pdb_seq = pdb_select['Subject Aligned Seq']
@@ -649,7 +649,6 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
         print('found bad columns :=', bad_cols)
     # ------------------------------------------------------ #
 
-    np.save('new_data_processing_s0.npy', s)
     # ------------ Replace Bad Amino Acid Letters if valid ones, two strategies --------- #
     if 1: # replace aa with potential correct aa
         # 2018.12.24:
@@ -676,7 +675,6 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
 
     
     # --------------------- Find Conserved Columns ------------------------------------ #
-    np.save('new_data_processing_s1.npy', s)
     conserved_cols = find_conserved_cols(s, conserved_cols)
     if printing:
         print("found conserved columns (80% repetition):\n", conserved_cols)
@@ -847,7 +845,6 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
     if printing:
         print('found bad columns :=', bad_cols)
 
-    np.save('old_data_processing_s0.npy', s)
     if 1: # replace aa with potential correct aa
         # 2018.12.24:
         # replace 'Z' by 'Q' or 'E' with prob
@@ -870,7 +867,6 @@ def data_processing(data_path, pfam_id, ipdb=0, gap_seqs=0.2, gap_cols=0.2, prob
         s = find_and_replace(s, 'B', np.array(['-']))
         s = find_and_replace(s, 'X', np.array(['-']))
 
-    np.save('old_data_processing_s1.npy', s)
     # remove conserved cols
     conserved_cols = find_conserved_cols(s, conserved_cols)
     if printing:
