@@ -4,9 +4,25 @@
 import numpy as np
 import pandas as pd
 import pickle
+from pypdb import Query
+from time import sleep
 # from scipy.stats import itemfreq #removed due to warning
 import os, sys
 from pathlib import Path
+
+from Bio import SeqIO
+import Bio.PDB, warnings
+from Bio.PDB import *
+from scipy.spatial import distance_matrix
+from Bio import BiopythonWarning
+from Bio import pairwise2
+from Bio.SubsMat.MatrixInfo import blosum62
+pdb_parser = Bio.PDB.PDBParser()
+
+from scipy.spatial import distance_matrix
+from urllib.error import HTTPError
+from prody import *
+
 
 #"""
 #seq_file = 'fasta_final.txt'
@@ -31,9 +47,80 @@ from pathlib import Path
 #    
 #    return seq
 #"""
+def query_pdb(msa, i):
+    seq = msa[i]
+    gap_seq = seq == '-'  # returns True/False for gaps/no gaps
+    subject = seq[~gap_seq]
+    seq_str = ''.join(subject)
 
-def find_best_pdb(pfam_id, data_path, pdb_dir):
+    try: 
+        q = Query(seq_str.upper(),
+          query_type="sequence",
+          return_type="polymer_entity")
+        search_results = q.search()
+    
+    
+        # print(search_results)
+        # print('sequence %d: ' % i, search_results['result_set'][0]['identifier'])
+        
+        # parse BLAST PDB search results
+        pdb_id = search_results['result_set'][0]['identifier']
+        score = search_results['result_set'][0]['score']
+        
+        match_dict = search_results['result_set'][0]['services'][0]['nodes'][0]['match_context'][0]
+        identity = match_dict['sequence_identity']
+        e_value = match_dict['evalue']
+        bitscore = match_dict['bitscore']
+        alignment_length = match_dict['alignment_length']
+        mismatches = match_dict['mismatches']
+        gaps_open = match_dict['gaps_opened']
+        query_beg = match_dict['query_beg']
+        query_end = match_dict['query_end']
+        subject_beg = match_dict['subject_beg']
+        subject_end = match_dict['subject_end']
+        query_len = match_dict['query_length']
+        subject_len = match_dict['subject_length']
+        query_aligned_seq = match_dict['query_aligned_seq']
+        subject_aligned_seq = match_dict['subject_aligned_seq']
+        pass
+    except(UserWarning):
+        print('bad query')
+        # fill with empty search result 
+        pdb_id = '0000' 
+        score = 0.0 
+        
+        match_dict = {} 
+        identity = 0. 
+        e_value = 1. 
+        bitscore = 0. 
+        alignment_length = 0 
+        mismatches = 0 
+        gaps_open = 0  
+        query_beg = 0  
+        query_end = 0 
+        subject_beg = 0 
+        subject_end = 0 
+        query_len = 0  
+        subject_len = 0 
+        query_aligned_seq = 0
+        subject_aligned_seq = 0
+        pass
+ 
+    # sleep(10)
+    return  [i, pdb_id, score, identity, e_value, bitscore, alignment_length, mismatches, gaps_open, \
+             query_beg, query_end, subject_beg, subject_end, query_len, subject_len, \
+             query_aligned_seq, subject_aligned_seq]
+
+ 
+
+
+
+def find_best_pdb(pfam_id, data_path, pdb_dir, n_cpu=20):
     from IPython.display import HTML
+    # Set Columns for eventual DataFrame sort.
+    columns = ['MSA Index', 'PDB ID', 'Score', 'Identity', 'E-value', 'Bitscore', 'Alignment Length', 'Mismatches', 'Gaps Opened', \
+                                  'Query Beg', 'Query End', 'Subject Beg', 'Subject End', 'Query Len', 'Subject Len', \
+                                  'Query Aligned Seq', 'Subject Aligned Seq']
 
     # Import from local directory
     # import sys
@@ -41,7 +128,7 @@ def find_best_pdb(pfam_id, data_path, pdb_dir):
     # from pypdb import *
 
     # Import from installed package
-    from pypdb import Query
+    print('looking for pdb_references in %s ' % pdb_dir)
     if os.path.exists('%s/%s_pdb_references.pkl' % (pdb_dir, pfam_id)):
         # if the query has already been done, load the raw query dataframe 
         try:
@@ -50,67 +137,142 @@ def find_best_pdb(pfam_id, data_path, pdb_dir):
             pdb_refs_ecc  = pd.read_csv('%s/%s_pdb_references.csv' % (pdb_dir, pfam_id))
     else:
         msa = load_msa(data_path, pfam_id)
-        pdb_matches = {}
-        print('Finding best PDB match for (Searching %d sequences)' % len(msa), pfam_id)
-        for i, seq in enumerate(msa):
-            try:
-                gap_seq = seq == '-'  # returns True/False for gaps/no gaps
-                subject = seq[~gap_seq]
-                seq_str = ''.join(subject)
-                q = Query(seq_str.upper(),
-                  query_type="sequence",
-                  return_type="polymer_entity")
-                search_results = q.search()
-            
-            
-                # print(search_results)
-                # print('sequence %d: ' % i, search_results['result_set'][0]['identifier'])
-                
-                # parse BLAST PDB search results
-                pdb_id = search_results['result_set'][0]['identifier']
-                score = search_results['result_set'][0]['score']
-                
-                match_dict = search_results['result_set'][0]['services'][0]['nodes'][0]['match_context'][0]
-                identity = match_dict['sequence_identity']
-                e_value = match_dict['evalue']
-                bitscore = match_dict['bitscore']
-                alignment_length = match_dict['alignment_length']
-                mismatches = match_dict['mismatches']
-                gaps_open = match_dict['gaps_opened']
-                query_beg = match_dict['query_beg']
-                query_end = match_dict['query_end']
-                subject_beg = match_dict['subject_beg']
-                subject_end = match_dict['subject_end']
-                query_len = match_dict['query_length']
-                subject_len = match_dict['subject_length']
-                query_aligned_seq = match_dict['query_aligned_seq']
-                subject_aligned_seq = match_dict['subject_aligned_seq']
-                
-                pdb_matches[i] = [i, pdb_id, score, identity, e_value, bitscore, alignment_length, mismatches, gaps_open, \
-                                  query_beg, query_end, subject_beg, subject_end, query_len, subject_len, \
-                                  query_aligned_seq, subject_aligned_seq]
-                
-            except(UserWarning):
-                print('bad query')
-                
-        # Convert to DataFrame and sort.
-        columns = ['MSA Index', 'PDB ID', 'Score', 'Identity', 'E-value', 'Bitscore', 'Alignment Length', 'Mismatches', 'Gaps Opened', \
-                                      'Query Beg', 'Query End', 'Subject Beg', 'Subject End', 'Query Len', 'Subject Len', \
-                                      'Query Aligned Seq', 'Subject Aligned Seq']
-    
-        pdb_refs_ecc = pd.DataFrame.from_dict(pdb_matches, orient='index', columns=columns)
-        pdb_refs_ecc.to_pickle('%s/%s_pdb_references.pkl' % (pdb_dir, pfam_id))
-        pdb_refs_ecc.to_csv('%s/%s_pdb_references.csv' % (pdb_dir, pfam_id))
+        dup_rows = []
 
+        print('Finding best PDB match for (Searching %d sequences)' % len(msa), pfam_id)
+        #try:  # try parallel run, if it doesent work just do serially
+        if 0:
+            print('\n\nQuerying PDB database in Parallel...\n')
+            from joblib import Parallel, delayed
+            pdb_matches = Parallel(n_jobs=2, verbose=10)(delayed(query_pdb)(msa, i) for i in range(len(msa)))     
+            pdb_refs_ecc = pd.DataFrame(pdb_matches, columns=columns)
+        #except(AttributeError):
+        else:
+            # Parallel query didnt work so do it in serial
+            print('Parallel query didnt work so we do it in serial')
+            pdb_matches = {}
+            for i, seq in enumerate(msa):
+                print('query sequence %d of %d ' % (i, msa.shape[0]))
+                # --- check for duplicate row --- #
+                if [a for a in seq] in dup_rows:
+                    continue
+                else:
+                    dup_rows.append([a for a in seq])
+                # ------------------------------- #
+                try:
+                    gap_seq = seq == '-'  # returns True/False for gaps/no gaps
+                    subject = seq[~gap_seq]
+                    seq_str = ''.join(subject)
+                    q = Query(seq_str.upper(),
+                      query_type="sequence",
+                      return_type="polymer_entity")
+                    search_results = q.search()
+                
+                
+                    # print(search_results)
+                    # print('sequence %d: ' % i, search_results['result_set'][0]['identifier'])
+                    
+                    # parse BLAST PDB search results
+                    pdb_id = search_results['result_set'][0]['identifier']
+                    score = search_results['result_set'][0]['score']
+                    
+                    match_dict = search_results['result_set'][0]['services'][0]['nodes'][0]['match_context'][0]
+                    identity = match_dict['sequence_identity']
+                    e_value = match_dict['evalue']
+                    bitscore = match_dict['bitscore']
+                    alignment_length = match_dict['alignment_length']
+                    mismatches = match_dict['mismatches']
+                    gaps_open = match_dict['gaps_opened']
+                    query_beg = match_dict['query_beg']
+                    query_end = match_dict['query_end']
+                    subject_beg = match_dict['subject_beg']
+                    subject_end = match_dict['subject_end']
+                    query_len = match_dict['query_length']
+                    subject_len = match_dict['subject_length']
+                    query_aligned_seq = match_dict['query_aligned_seq']
+                    subject_aligned_seq = match_dict['subject_aligned_seq']
+                    
+                    pdb_matches[i] = [i, pdb_id, score, identity, e_value, bitscore, alignment_length, mismatches, gaps_open, \
+                                      query_beg, query_end, subject_beg, subject_end, query_len, subject_len, \
+                                      query_aligned_seq, subject_aligned_seq]
+                                
+                    #print('query %d: good' % i)
+                except(UserWarning):
+                    #print('query %d: bad' % i)
+                    pass
+            pdb_refs_ecc = pd.DataFrame.from_dict(pdb_matches, orient='index', columns=columns)
+            if len(pdb_refs_ecc) == 0:
+                print('PDB-sequence query yields no results!!')
+                sys.exit(23)
+     
+            pdb_refs_ecc.to_pickle('%s/%s_pdb_references.pkl' % (pdb_dir, pfam_id))
+            pdb_refs_ecc.to_csv('%s/%s_pdb_references.csv' % (pdb_dir, pfam_id))
+
+        print('\nPDB query Dictionary length: ', len(pdb_matches)) 
     print('Raw-Query PDB dataframe gives %d matches... \n' % len(pdb_refs_ecc))
-    pdb_sorted = pdb_refs_ecc.loc[pdb_refs_ecc['Gaps Opened']==0]
-    pdb_sorted = pdb_sorted.loc[pdb_sorted['Identity']>.95] 
+    pdb_sorted = pdb_refs_ecc.loc[pdb_refs_ecc['Identity']>.90] 
+    print('PDB dataframe with better than .90 Identity: %d' % len(pdb_sorted))
+    pdb_sorted = pdb_sorted.loc[pdb_sorted['Gaps Opened']==0]
+    print('PDB dataframe with no gaps open: %d' % len(pdb_sorted))
     pdb_sorted = pdb_sorted.sort_values(by=['Score', 'Bitscore'], ascending = False).sort_values(by='E-value')
     pdb_matched = pdb_sorted.loc[pdb_sorted['Alignment Length']==pdb_sorted['Query Len']]
     pdb_matched_sorted = pdb_matched.sort_values(by=['Alignment Length', 'Bitscore', 'Score'], ascending = False).sort_values(by='E-value')
     pdb_matched_matched_sorted = pdb_matched_sorted.reset_index(drop=True)
     print('Sorted PDB matches (%d matches): \n' % len(pdb_matched_sorted), pdb_matched_sorted.head())
     return pdb_matched_sorted
+
+
+
+def pdb2msa(pdb_file):
+    pdb_id = os.path.basename(pdb_file)[3:7]
+    print(pdb_id)
+    chain_matches = {}
+    for record in SeqIO.parse(pdb_file, "pdb-seqres"):
+        print("Record id %s, chain %s" % (record.id, record.annotations["chain"]))
+        print(record.dbxrefs)
+
+    pdb_model = pdb_parser.get_structure(str(pdb_id), pdb_file)[0]
+    prody_columns =  ['PDB ID' , 'Chain', 'accession', 'class', 'id', 'locations', 'type']
+    prody_df = pd.DataFrame(columns = prody_columns)
+    for chain in pdb_model.get_chains():
+        ppb = PPBuilder().build_peptides(chain)
+        for i, pp in enumerate(ppb):
+            poly_seq = list()
+            for char in str(pp.get_sequence()):
+                poly_seq.append(char)
+            print('Chain %s polypeptide %d: ' % (chain.get_id(), i),''.join(poly_seq))
+
+        try:
+            prody_search = searchPfam(''.join(poly_seq))
+            print(prody_search)
+        except(HTTPError):
+            print('HTTPError')
+            pass
+        
+        prody_dict = {}
+        for pfam_key in prody_search.keys():
+            ps = prody_search[pfam_key]
+            if pfam_key not in prody_df.index:
+                prody_df.loc[pfam_key] = [pdb_id, chain.get_id(), ps['accession'], ps['class'], ps['id'], ps['locations'], ps['type']]
+            elif ps['locations']['bitscore'] > prody_df.loc[pfam_key]['locations']['bitscore'] and ps['locations']['ind_evalue'] < prody_df.loc[pfam_key]['locations']['ind_evalue']:
+                prody_df.loc[pfam_key] = [pdb_id, chain.get_id(), ps['accession'], ps['class'], ps['id'], ps['locations'], ps['type']]
+            else:
+                print('Pfam %s already found and the match is not an improvement' % pfam_key)
+            print(prody_df.head())
+        #for key in prody_search.keys():
+        #    msa_path = fetchPfamMSA(prody_search[key])
+        #    print(msa_path)        
+
+    if 1:
+        # load the Pfam MSA from biowulf database
+        fasta_file = fetchPfamMSA(prody_df.index[0], format='fasta')
+        print(fasta_file)
+    else:
+        # Download the Pfam MSA with prody
+        for pfam_id in prody_search.keys():
+            msa_file = fetchPfamMSA(prody_search[pfam_id]['accession'])
+            print(msa_file)
+
 
 
 # =========================================================================================#
@@ -458,54 +620,65 @@ def load_msa(data_path, pfam_id):
 
 def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
                         conserved_cols=0.8, printing=True, out_dir='./', pdb_dir='./', letter_format=False, 
-                        remove_cols=True, create_new=True):
-    
+                        remove_cols=True, create_new=True, n_cpu=4):
+    n_cpu = min(10, n_cpu-2) 
     np.random.seed(123456789)
     if not create_new and os.path.exists("%s/%s_pdb_query.npy" % (out_dir, pfam_id)):
         print('Because create_new is False and files exist we will load preprocessed data:')
         if remove_cols:
             s = np.load("%s/%s_preproc_msa.npy" % (out_dir, pfam_id))
-            s_index = np.load("%s/%s_s_index.npy" % (out_dir, pfam_id))
+            s_index = np.load("%s/%s_preproc_sindex.npy" % (out_dir, pfam_id))
             removed_cols = np.load("%s/%s_removed_cols.npy" % (out_dir, pfam_id))
             ref_seq = np.load("%s/%s_preproc_refseq.npy" % (out_dir, pfam_id))
-            pdb_seq = np.load("%s/%s_pdb_seq.npy" % (out_dir, pfam_id))
+            pdb_seq = np.load("%s/%s_preproc_pdb_seq.npy" % (out_dir, pfam_id))
         else: 
-            s = np.load("%s/%s_preproc_allCols_msa.npy" % (out_dir, pfam_id))
-            s_index = np.load("%s/%s_s_allCols_index.npy" % (out_dir, pfam_id))
+            s = np.load("%s/%s_allCols_msa.npy" % (out_dir, pfam_id))
+            s_index = np.load("%s/%s_allCols_sindex.npy" % (out_dir, pfam_id))
             removed_cols = np.load("%s/%s_removed_cols.npy" % (out_dir, pfam_id))
-            ref_seq = np.load("%s/%s_preproc_allCols_refseq.npy" % (out_dir, pfam_id))
-            pdb_seq = np.load("%s/%s_pdb_seq.npy" % (out_dir, pfam_id))
+            ref_seq = np.load("%s/%s_allCols_refseq.npy" % (out_dir, pfam_id))
+            pdb_seq = np.load("%s/%s_allCols_pdb_seq.npy" % (out_dir, pfam_id))
 
         if not letter_format and isinstance(s[0][0], str):
             s = convert_letter2number(s)
 
-        pdb_matches= find_best_pdb(pfam_id, data_path, pdb_dir)
-       
+        pdb_matches= find_best_pdb(pfam_id, data_path, pdb_dir, n_cpu=n_cpu)
+      
     
         # --------------------------------------------------------------------------------------------------------- #
         # Load PDB reference from Uniprot/Pfam to cross reference Queried PDB matches from find_best_pdb()
-        individual_pdb_ref_file = Path(data_path, pfam_id, 'pdb_refs.npy')
-        pdb = np.load(individual_pdb_ref_file)
-        # Load PDB reference file and delete 'b' in front of letters (python 2 --> python 3)
-        pdb = np.array([pdb[t,i].decode('UTF-8') for t in range(pdb.shape[0]) \
-                 for i in range(pdb.shape[1])]).reshape(pdb.shape[0],pdb.shape[1])
-        # Create pandas dataframe for protein structure
-        pdb_df = pd.DataFrame(pdb,columns = ['PF','seq','id','uniprot_start','uniprot_end',\
-                                         'pdb_id','chain','pdb_start','pdb_end'])
-        # Extract PDB IDs from PDB reference dataframe
-        pdb_reference_ids = np.unique(pdb_df['pdb_id'].to_numpy())
+        try:
+            # Load PDB reference from Uniprot/Pfam to cross reference Queried PDB matches from find_best_pdb()
+            individual_pdb_ref_file = Path(data_path, pfam_id, 'pdb_refs.npy')
+            pdb = np.load(individual_pdb_ref_file)
+            # Load PDB reference file and delete 'b' in front of letters (python 2 --> python 3)
+            pdb = np.array([pdb[t,i].decode('UTF-8') for t in range(pdb.shape[0]) \
+                     for i in range(pdb.shape[1])]).reshape(pdb.shape[0],pdb.shape[1])
+            # Create pandas dataframe for protein structure
+            pdb_df = pd.DataFrame(pdb,columns = ['PF','seq','id','uniprot_start','uniprot_end',\
+                                             'pdb_id','chain','pdb_start','pdb_end'])
+            # Extract PDB IDs from PDB reference dataframe
+            pdb_reference_ids = np.unique(pdb_df['pdb_id'].to_numpy())
+            # Find PDB matches who's PDB ID also shows up in Uniprot/Pfam PDB reference file
+            matches_in_reference = []
+            for i, pid in enumerate(pdb_matches['PDB ID'].to_numpy()):
+                if pid[:4] in pdb_reference_ids:
+                    matches_in_reference.append(i)
+            if len(pdb_matches.iloc[matches_in_reference]) > 0:
+                pdb_reference_matches = pdb_matches.iloc[matches_in_reference]
+            else:
+                pdb_reference_matches = pdb_matches
+        except(IndexError):
+            print('Loaded pdb: ', pdb)
+            print('\n\nEMPTY PDB REFERENCE!!!\n(in data_processing. so we wont have a pdb_ref match..)\n\n')
+            pdb_reference_ids = None
+            pdb_reference_matches = pdb_matches
 
-        # Find PDB matches who's PDB ID also shows up in Uniprot/Pfam PDB reference file
-        matches_in_reference = []
-        for i, pid in enumerate(pdb_matches['PDB ID'].to_numpy()):
-            if pid[:4] in pdb_reference_ids:
-                matches_in_reference.append(i)
-        pdb_reference_matches = pdb_matches.iloc[matches_in_reference]
-        # --------------------------------------------------------------------------------------------------------- #
+         # --------------------------------------------------------------------------------------------------------- #
 
         
         pdb_select = pdb_reference_matches.iloc[index_pdb]
        #  pdb_select = pdb_reference_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
+        print(pdb_matches.head())
 
         pdb_id = pdb_select['PDB ID']
         original_tpdb = pdb_select['MSA Index']
@@ -515,9 +688,15 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
             if not letter_format:
                 # print(i, ''.join(convert_number2letter(seq)).upper())
                 # print(''.join(ref_seq).upper())
-                if ''.join(convert_number2letter(seq)).upper() == ''.join(ref_seq).upper():
-                    current_tpdb = i
-                    break
+                try:
+                    if ''.join(convert_number2letter(seq)).upper() == ''.join(ref_seq).upper():
+                        current_tpdb = i
+                        break
+                except(TypeError):
+                    if ''.join(convert_number2letter(seq)).upper() == ''.join(convert_number2letter(ref_seq)).upper():
+                        current_tpdb = i
+                        break
+
             else: 
                 if ''.join(seq) == ''.join(ref_seq):
                     current_tpdb = i
@@ -544,32 +723,51 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
     if printing:
         print("#\n\n--------------------- Find Matching PDB Strucutre for MSA ----#")
         
-    pdb_matches= find_best_pdb(pfam_id, data_path, pdb_dir)
+    pdb_matches= find_best_pdb(pfam_id, data_path, pdb_dir, n_cpu=n_cpu)
+    print(pdb_matches.head())
 
     
     
     # --------------------------------------------------------------------------------------------------------- #
-    # Load PDB reference from Uniprot/Pfam to cross reference Queried PDB matches from find_best_pdb()
-    individual_pdb_ref_file = Path(data_path, pfam_id, 'pdb_refs.npy')
-    pdb = np.load(individual_pdb_ref_file)
-    # Load PDB reference file and delete 'b' in front of letters (python 2 --> python 3)
-    pdb = np.array([pdb[t,i].decode('UTF-8') for t in range(pdb.shape[0]) \
-             for i in range(pdb.shape[1])]).reshape(pdb.shape[0],pdb.shape[1])
-    # Create pandas dataframe for protein structure
-    pdb_df = pd.DataFrame(pdb,columns = ['PF','seq','id','uniprot_start','uniprot_end',\
-                                     'pdb_id','chain','pdb_start','pdb_end'])
-    # Extract PDB IDs from PDB reference dataframe
-    pdb_reference_ids = np.unique(pdb_df['pdb_id'].to_numpy())
-    
-    # Find PDB matches who's PDB ID also shows up in Uniprot/Pfam PDB reference file
-    matches_in_reference = []
-    for i, pid in enumerate(pdb_matches['PDB ID'].to_numpy()):
-        if pid[:4] in pdb_reference_ids:
-            matches_in_reference.append(i)
-    pdb_reference_matches = pdb_matches.iloc[matches_in_reference]
+    # re-do PDB reference file match in case it wasn't loaded ie, no if file exisists pass-through
+    try:
+        # Load PDB reference from Uniprot/Pfam to cross reference Queried PDB matches from find_best_pdb()
+        individual_pdb_ref_file = Path(data_path, pfam_id, 'pdb_refs.npy')
+        pdb = np.load(individual_pdb_ref_file)
+        # Load PDB reference file and delete 'b' in front of letters (python 2 --> python 3)
+        pdb = np.array([pdb[t,i].decode('UTF-8') for t in range(pdb.shape[0]) \
+                 for i in range(pdb.shape[1])]).reshape(pdb.shape[0],pdb.shape[1])
+        # Create pandas dataframe for protein structure
+        pdb_df = pd.DataFrame(pdb,columns = ['PF','seq','id','uniprot_start','uniprot_end',\
+                                         'pdb_id','chain','pdb_start','pdb_end'])
+        # Extract PDB IDs from PDB reference dataframe
+        pdb_reference_ids = np.unique(pdb_df['pdb_id'].to_numpy())
+        # Find PDB matches who's PDB ID also shows up in Uniprot/Pfam PDB reference file
+        matches_in_reference = []
+        for i, pid in enumerate(pdb_matches['PDB ID'].to_numpy()):
+            if pid[:4] in pdb_reference_ids:
+                matches_in_reference.append(i)
+        if len(pdb_matches.iloc[matches_in_reference]) > 0:
+            pdb_reference_matches = pdb_matches.iloc[matches_in_reference]
+        else:
+            pdb_reference_matches = pdb_matches
+    except(IndexError):
+        print('Loaded pdb: ', pdb)
+        print('\n\nEMPTY PDB REFERENCE!!!\n(in data_processing. so we wont have a pdb_ref match..)\n\n')
+        pdb_reference_ids = None
+        pdb_reference_matches = pdb_matches
+
+ 
+
     # --------------------------------------------------------------------------------------------------------- #
 
     # Since PDB matches are ordered by best matching.. choose first (0th) one ie index_pdb
+    if len(pdb_reference_matches) == 0:
+        print('No PDB matches found in MSA')
+        print('should resort to pdb_refs to try as last ditch...\nIncomplete...\n\n\n\n')
+        sys.exit(23)
+
+
     pdb_select = pdb_reference_matches.iloc[index_pdb]
 #     # enforce old PDB refs structure for PF00186
 #    pdb_select = pdb_matches.loc[pdb_matches['MSA Index']==69].iloc[0]
@@ -720,20 +918,19 @@ def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=
     # min_res = min_res(s)
     # print(min_res)
 
+    np.save("%s/%s_pdb_query.npy" % (out_dir, pfam_id), pdb_matches)
+    np.save("%s/%s_removed_cols.npy" % (out_dir, pfam_id), removed_cols)
+    np.save("%s/%s_pdb_seq.npy" % (out_dir, pfam_id), pdb_seq)
     if remove_cols:
         np.save("%s/%s_preproc_msa.npy" % (out_dir, pfam_id), s)
-        np.save("%s/%s_s_index.npy" % (out_dir, pfam_id), s_index)
-        np.save("%s/%s_removed_cols.npy" % (out_dir, pfam_id), removed_cols)
+        np.save("%s/%s_preproc_sindex.npy" % (out_dir, pfam_id), s_index)
         np.save("%s/%s_preproc_refseq.npy" % (out_dir, pfam_id), s[tpdb])
-        np.save("%s/%s_pdb_seq.npy" % (out_dir, pfam_id), pdb_seq)
-        np.save("%s/%s_pdb_query.npy" % (out_dir, pfam_id), pdb_matches)
+        np.save("%s/%s_preproc_pdb_seq.npy" % (out_dir, pfam_id), pdb_seq)
     else:
-        np.save("%s/%s_preproc_allCols_msa.npy" % (out_dir, pfam_id), s)
-        np.save("%s/%s_s_allCols_index.npy" % (out_dir, pfam_id), s_index)
-        np.save("%s/%s_removed_cols.npy" % (out_dir, pfam_id), removed_cols)
-        np.save("%s/%s_preproc_allCols_refseq.npy" % (out_dir, pfam_id), s[tpdb])
-        np.save("%s/%s_pdb_seq.npy" % (out_dir, pfam_id), pdb_seq)
-        np.save("%s/%s_pdb_query.npy" % (out_dir, pfam_id), pdb_matches)
+        np.save("%s/%s_allCols_msa.npy" % (out_dir, pfam_id), s)
+        np.save("%s/%s_allCols_sindex.npy" % (out_dir, pfam_id), s_index)
+        np.save("%s/%s_allCols_refseq.npy" % (out_dir, pfam_id), s[tpdb])
+        np.save("%s/%s_allCols_pdb_seq.npy" % (out_dir, pfam_id), pdb_seq)
 
 
 

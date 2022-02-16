@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from direct_info import direct_info
 
 # import data processing and general DCA_ER tools
-from data_processing import data_processing
+from data_processing import data_processing_new
 import ecc_tools as tools
 from pathlib import Path
 np.random.seed(1)
@@ -33,108 +33,84 @@ data_path = Path('/data/cresswellclayec/DCA_ER/Pfam-A.full/')
 
 pfam_id = sys.argv[1]
 n_jobs = int(sys.argv[2])
-print('Finding MF contacts for %s', pfam_id)
+print('Finding ER contacts for %s', pfam_id)
 
+create_new = True
+removing_cols = True
 
-DCA_ER_dir = '/data/cresswellclayec/DCA_ER/'
-msa_npy_file = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/msa.npy' % pfam_id
-msa_fa_file  = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/msa.fa' % pfam_id
-pdb_ref_file = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/pdb_refs.npy' % pfam_id
-out_dir = '%sprotein_data/di/' % DCA_ER_dir
-processed_data_dir = "%s/protein_data/data_processing_output" % DCA_ER_dir
-
-
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# Set DCA_ER directory
 
 # Define data directories
-# Need to think on best way to do this..
+DCA_ER_dir = '/data/cresswellclayec/DCA_ER' # Set DCA_ER directory
+biowulf_dir = '%s/biowulf' % DCA_ER_dir
+msa_npy_file = '%s/%s/msa.npy' % (str(data_path), pfam_id)
+msa_fa_file  = '%s/%s/msa.fa' %  (str(data_path), pfam_id)
+pdb_ref_file = '%s/%s/pdb_refs.npy' %  (str(data_path), pfam_id)
+
+out_dir = '%s/protein_data/di/' % biowulf_dir 
+processed_data_dir = "%s/protein_data/data_processing_output" % biowulf_dir
+pdb_dir = '%s/protein_data/pdb_data/' % biowulf_dir 
+
+
+# ------------------------- Get PDB reference Data from Uniprot/Pfam ------------------------------------------------------------------------------------------------------- #
+
 # Referencing the same dataframe may be useful so we dont always have to load individual ref files...
 # however we also
 individual_pdb_ref_file = Path(data_path, pfam_id, 'pdb_refs.npy')
 pdb = np.load(individual_pdb_ref_file)
 
-# delete 'b' in front of letters (python 2 --> python 3)
-pdb = np.array([pdb[t,i].decode('UTF-8') for t in range(pdb.shape[0]) \
+try: 
+    # delete 'b' in front of letters (python 2 --> python 3)
+    pdb = np.array([pdb[t,i].decode('UTF-8') for t in range(pdb.shape[0]) \
          for i in range(pdb.shape[1])]).reshape(pdb.shape[0],pdb.shape[1])
+    
+    
+    # Print number of pdb structures in Protein ID folder
+    npdb = pdb.shape[0]
+    print('number of pdb structures:',npdb)
+    
+    # Create pandas dataframe for protein structure
+    pdb_df = pd.DataFrame(pdb,columns = ['PF','seq','id','uniprot_start','uniprot_end',\
+                                     'pdb_id','chain','pdb_start','pdb_end'])
+    print(pdb_df.head())
+    pdb_reference_ids = np.unique(pdb_df['pdb_id'].to_numpy())
+    print('PDB reference IDs:\n', pdb_reference_ids)
+    pdb_ref_ipdb = 0
+    print('seq:',int(pdb[pdb_ref_ipdb,1]))
 
 
-# Print number of pdb structures in Protein ID folder
-npdb = pdb.shape[0]
-print('number of pdb structures:',npdb)
 
-# Create pandas dataframe for protein structure
-pdb_df = pd.DataFrame(pdb,columns = ['PF','seq','id','uniprot_start','uniprot_end',\
-                                 'pdb_id','chain','pdb_start','pdb_end'])
-pdb_df.head()
-
-ipdb = 0
-printing = True
-print('seq:',int(pdb[ipdb,1]))
+except(IndexError):
+    print('Loaded pdb: ', pdb)
+    print('\n\nEMPTY PDB REFERENCE!!!\n\n')
+    pdb_reference_ids = None
 
 
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+s0, curated_cols, s_index, tpdb, pdb_select \
+= data_processing_new(data_path, pfam_id, index_pdb=0,gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
+                        conserved_cols=0.9, printing=True, out_dir=processed_data_dir, pdb_dir=pdb_dir,  letter_format=False, 
+                        remove_cols=removing_cols, create_new=create_new, n_cpu=n_jobs)
 
-#s0,cols_removed, s_index, tpdb, orig_seq_len = data_processing(data_path, pfam_id, ipdb,\
-#                gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, conserved_cols=0.9, printing=printing, out_dir=processed_data_dir)
-#print('\n\n\nPreprocessed reference Sequence: ', s0[tpdb])
-#
-# npy2fa does not remove cols this way we are as close to original as possible
-msa_outfile, ref_outfile, s0, cols_removed, s_index, tpdb, orig_seq_len  = tools.npy2fa(pfam_id, msa_npy_file, pdb_ref_file=pdb_ref_file, ipdb=ipdb, preprocess=True,gap_seqs=.2, gap_cols=.2, prob_low=.004, conserved_cols=.9, letter_format=False)
 
+pdb_chain, ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range, poly_seq, pp_ca_coords_curated, pp_ca_coords_full_range \
+= tools.contact_map_new(pdb_id=pdb_select['PDB ID'][:4], pdb_range=[pdb_select['Subject Beg'], pdb_select['Subject End']], \
+                  removed_cols=curated_cols, queried_seq=pdb_select['Subject Aligned Seq'],  pdb_out_dir=pdb_dir)
+
+# --------------------------------- Process Data and get Contact Map ------------------------------------------------------------------------------------------------------- #
+
+print('\n\n\nPreprocessed reference Sequence: ', s0[tpdb])
 # save processed data
 np.save('%s/%s_ER_s0.npy' 		% (processed_data_dir, pfam_id), s0)
-np.save('%s/%s_ER_cols_removed.npy' 	% (processed_data_dir, pfam_id), cols_removed) 
+np.save('%s/%s_ER_curated_cols.npy' 	% (processed_data_dir, pfam_id), curated_cols) 
 np.save('%s/%s_ER_s_index.npy' 		% (processed_data_dir, pfam_id), s_index)
 np.save('%s/%s_ER_tpdb.npy' 		% (processed_data_dir, pfam_id), tpdb)
-np.save('%s/%s_ER_original_seq_len.npy' % (processed_data_dir, pfam_id), orig_seq_len)
 
-# data processing
 print(s0.shape, '\n\n\n')
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
-# # Load pydca trimmed datrimmed_data_outfile = '%sprotein_data/data_processing_output/MSA_%s_Trimmed.fa' % (DCA_ER_dir, pfam_id)
-# trimmed_msa_file = Path(DCA_ER_dir, 'protein_data/data_processing_output/MSA_%s_Trimmed.fa' % pfam_id)
-# s0_pydca = tools.read_FASTA(str(trimmed_msa_file), ref_index = int(pdb[ipdb,1]))
-
-
-# We don't need to generate contact map while calculating DI on Biowulf
-if 0:
-    # Load csv of PDB-PFAM mapping.
-    #    downloaded from 
-    #    ftp://ftp.ebi.ac.uk/pub/databases/msd/sifts/flatfiles/csv/pdb_pfam_mapping.csv.gz
-    pdb_id = pdb_df.iloc[ipdb]['pdb_id']
-    pdb_chain = pdb_df.iloc[ipdb]['chain']
-
-    pdb_pfam_map_file = Path('%s/protein_data/pdb_data/pdb_pfam_mapping.csv' % DCA_ER_dir)
-    pdb_map_df = pd.read_csv(pdb_pfam_map_file, sep=',', header=1)
-    print(pdb_map_df.head())
-
-    pdb_id_map_df = pdb_map_df.loc[pdb_map_df['PDB']==pdb_id.lower()]
-    pdb_pfam_map = pdb_id_map_df.loc[pdb_id_map_df['CHAIN']==pdb_chain]
-
-    ## Generate and Plot Contact Map from PDB coordinates!
-    # Check that pdb--pfam mapping is unique
-    if pdb_pfam_map.shape[0] > 1:
-        print('Unable to get unique PDB-->Pfam mapping')
-        print(pdb_pfam_map)
-
-    # pp_range = [pdb_info['PDB_START'], pdb_info['PDB_END']]
-    pp_range = [pdb_pfam_map.iloc[0]['PDB_START'], pdb_pfam_map.iloc[0]['PDB_END']]
-    print('Polypeptide range for contact map: ', pp_range)
-
-
-    pdb_out = "%s/protein_data/pdb_data" % DCA_ER_dir
-    # Directory for storing PDB data locally
-    # returns contact map with the appropriate columns removed..
-    # For list of retained columns us s_index
-    ct, ct_full, n_amino_full, poly_seq_curated = tools.contact_map(pdb, ipdb, pp_range, cols_removed, s_index, pdb_out_dir=pdb_out, printing=printing)
-    print(ct.shape)
-    print(ct_full.shape)
-
-
-    ct_mat = ct
-
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+print(pdb_chain)
+print(pdb_select)
+# -------------------------------- Run ER Method --------------------------------------------------------------------------------------------------------------------------- #
 
 # number of positions
 n_var = s0.shape[1]
@@ -161,7 +137,6 @@ print("Total number of variables",mx_sum)
 # number of bias term
 n_linear = mx_sum - n_var
 
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 onehot_encoder = OneHotEncoder(sparse=False,categories='auto')
 # s is OneHot encoder format, s0 is original sequnce matrix
@@ -172,13 +147,13 @@ s = onehot_encoder.fit_transform(s0)
 #      s.shape,") --> ",s[0], " has length ",s[0].shape)a
 
 
-# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 # Define wight matrix with variable for each possible amino acid at each sequence position
 w = np.zeros((mx.sum(),mx.sum())) 
 h0 = np.zeros(mx.sum())
 
 
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 import sys
@@ -240,17 +215,18 @@ np.save(w_file, w)
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
 
 di = direct_info(s0,w)
-print(di)
-print(di.shape)
-print(len(s_index))
+# print(di)
+print('s_index length: ', len(s_index))
+print('di shape: ', di.shape)
+
+if 0: # we can just do this in postprocessing
+    if not removing_cols:
+        ER_di = np.delete(di, curated_cols,0)
+        ER_di = np.delete(ER_di, curated_cols,1)
 
 print(di.shape)
-ER_di = np.delete(di, cols_removed,0)
-ER_di = np.delete(ER_di, cols_removed,1)
-
-print(ER_di.shape)
 
 er_file = "%s/%s_ER_di.npy" % (out_dir, pfam_id)
-np.save(er_file, ER_di)
+np.save(er_file, di)
 
 print('Complete...')

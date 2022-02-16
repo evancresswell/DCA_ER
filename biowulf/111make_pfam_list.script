@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#sbatch --mem=150g --time=12:00:00 111make_pfam_list.script
+source /data/cresswellclayec/conda/etc/profile.d/conda.sh; conda activate DCA_ER; python 11pfam_list_considered.py
+
+

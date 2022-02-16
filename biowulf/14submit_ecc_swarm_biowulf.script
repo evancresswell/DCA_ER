@@ -1,6 +1,9 @@
 #!/bin/bash
 
-#swarm -f er.swarm -t 32 -g 150.0 --time=0-10:00:00 --partition norm --module singularity --logdir swarm_output -b 10 #  quick # norm
-#swarm -f mf.swarm -t 32 -g 150.0 --time=0-10:00:00 --partition norm --module singularity --logdir swarm_output -b 10 #  quick # norm
-swarm -f pydca_plm.swarm -t 32 -g 150.0 --time=1-00:00:00 --partition norm --module singularity --logdir swarm_output -b 10  #  quick # norm
-#swarm -f pydca_mf.swarm -t 32 -g 150.0 --time=1-0:00:00 --partition norm --module singularity --logdir swarm_output -b 10 # -b 100 #  quick # norm
+#swarm -f er.swarm -t 32 -g 150.0 --time=0-02:00:00 --partition norm --logdir swarm_output #  quick # norm
+#swarm -f mf.swarm -t 32 -g 150.0 --time=0-02:00:00 --partition norm --logdir swarm_output #  quick # norm
+#swarm -f pydca_plm.swarm -t 32 -g 150.0 --time=1-00:00:00 --partition norm --logdir swarm_output # -b 5  #  quick # norm
+# swarm -f pydca_mf.swarm -t 32 -g 150.0 --time=1-0:00:00 --partition norm --logdir swarm_output # -b 5 # -b 100 #  quick # norm
+
+# prep data for simulations 
+# swarm -f prep_data.swarm  -g 15 --time=1-0:00:00 --partition norm --logdir swarm_output # -b 5 # -b 100 #  quick # norm

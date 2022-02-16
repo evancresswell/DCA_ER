@@ -1,6 +1,5 @@
 import pydca
 from pydca.plmdca import plmdca
-from pydca.meanfield_dca import meanfield_dca
 from pydca import sequence_backmapper
 from pydca.msa_trimmer import msa_trimmer
 from pydca.contact_visualizer import contact_visualizer
@@ -8,58 +7,43 @@ from pydca import dca_utilities
 import os, sys
 import pandas as pd
 import numpy as np
-
 print(os.getcwd())
 
-
 method = "DI"
-preprocess = False # do we want to preprocess FASTA files the same way as in DCA-ER method?
+create_new = True
 
 pfam_id = sys.argv[1]
 n_cpu = int(sys.argv[2])
-print('Finding pydca PLM contacts for %s', pfam_id)
+print('Finding pydca MF contacts for %s', pfam_id)
 
+# Define data directories
+data_path = '/data/cresswellclayec/Pfam-A.full'
+DCA_ER_dir = '/data/cresswellclayec/DCA_ER' # Set DCA_ER directory
+biowulf_dir = '%s/biowulf' % DCA_ER_dir
+msa_npy_file = '%s/%s/msa.npy' % (str(data_path), pfam_id)
+msa_fa_file  = '%s/%s/msa.fa' %  (str(data_path), pfam_id)
+pdb_ref_file = '%s/%s/pdb_refs.npy' %  (str(data_path), pfam_id)
 
-DCA_ER_dir = '/data/cresswellclayec/DCA_ER/'
-msa_npy_file = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/msa.npy' % pfam_id
-msa_fa_file  = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/msa.fa' % pfam_id
-pdb_ref_file = '/data/cresswellclayec/DCA_ER/Pfam-A.full/%s/pdb_refs.npy' % pfam_id
-out_dir = '%sprotein_data/di/' % DCA_ER_dir
-processed_data_dir = "%s/protein_data/data_processing_output" % DCA_ER_dir
-
-
+out_dir = '%s/protein_data/di/' % biowulf_dir 
+processed_data_dir = "%s/protein_data/data_processing_output" % biowulf_dir
+pdb_dir = '%s/protein_data/pdb_data/' % biowulf_dir 
+pdb_data_dir = '%s/protein_data/pdb_data' % biowulf_dir
 
 
 # os.chdir('/home/evan/PycharmProjects/DCA_ER')
 # os.chdir('/home/eclay/DCA_ER') # Hurrican Location
 os.chdir(DCA_ER_dir)
 ipdb = 0
-from ecc_tools import npy2fa
-if not preprocess:
-    msa_outfile, ref_outfile, s = npy2fa(pfam_id, msa_npy_file, pdb_ref_file=pdb_ref_file, ipdb=ipdb, preprocess=preprocess)
-else:
-    msa_outfile, ref_outfile, s, cols_removed, s_index, tpdb, orig_seq_len  = npy2fa(pfam_id, msa_npy_file, pdb_ref_file=pdb_ref_file, ipdb=ipdb, preprocess=preprocess,
-                                                                                      gap_seqs=.2, gap_cols=.2, prob_low=.004, conserved_cols=.9)
-
-    print('Saved pre-processed msa to %s' % msa_outfile)
-    # print(s)
-    # print(s.shape)
-    gap_pdb = s[tpdb] == '-'  # returns True/False for gaps/no gaps in reference sequence            
-    s_gap = s[:, ~gap_pdb]  # removes gaps in reference sequence                                     
-    print(gap_pdb)
-    ref_s = s_gap[tpdb]
-    print(s[tpdb])
-    print(s[tpdb].shape)
-    print(ref_s)
-    print(ref_s.shape)
-    print(s.shape)
-#     for col_i in range(s.shape[1]):
-#         if col_i in cols_removed:
-#             print(s[tpdb,col_i])
-#             print(s[:,col_i])
+from ecc_tools import npy2fa_new
 
 
-print('Preprocessed: %r, s dimensions: ' % preprocess, s.shape)
+os.chdir(DCA_ER_dir)
+
+msa_outfile, ref_outfile, s, pdb_select, pdb_chain, tpdb = npy2fa_new(data_path, pfam_id, pdb_data_dir, index_pdb=0, n_cpu=n_cpu, create_new=create_new, processed_data_dir=processed_data_dir)
+print(pdb_select)
+pdb_id = pdb_select['PDB ID'][:4]
+
+
 
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
@@ -80,29 +64,30 @@ with open(trimmed_data_outfile, 'w') as fh:
         fh.write('>{}\n{}\n'.format(seqid, seq))
         
 
-# Taken from begining of MSA trimmer (trim_by_refseq)
-from pydca.sequence_backmapper.sequence_backmapper import SequenceBackmapper
-seqbackmapper = SequenceBackmapper(msa_file = str(msa_outfile), refseq_file = str(ref_outfile), biomolecule = 'protein')
-
-matching_seqs = seqbackmapper.find_matching_seqs_from_alignment()
-pydca_refseq = matching_seqs[0]
-for i, seq in enumerate(s):
-    seq_str = ""
-    for a in seq:
-        seq_str += a
-    if seq_str == pydca_refseq:
-        sbm_tpdb = i
-        npy_refseq = seq
-        break
-
-print('SequenceBackmapper found reference, first ocurring sequence has index ', sbm_tpdb)
-print('s[%d] = ' % sbm_tpdb, s[sbm_tpdb])
-
-
-
+# # Taken from begining of MSA trimmer (trim_by_refseq)
+# from pydca.sequence_backmapper.sequence_backmapper import SequenceBackmapper
+# seqbackmapper = SequenceBackmapper(msa_file = str(msa_outfile), refseq_file = str(ref_outfile), biomolecule = 'protein')
+# 
+# matching_seqs = seqbackmapper.find_matching_seqs_from_alignment()
+# pydca_refseq = matching_seqs[0]
+# 
+# for i, seq in enumerate(s):
+#     seq_str = ""
+#     for a in seq:
+#         seq_str += a
+#     print(seq_str)
+#     print(pydca_refseq)
+#     if seq_str == pydca_refseq:
+#         sbm_tpdb = i
+#         npy_refseq = seq
+#         break
+# 
+print('SequenceBackmapper found reference, first ocurring sequence has index ', tpdb)
 
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+
+
 
 # Compute DCA scores using Pseudolikelihood maximization algorithm
 
@@ -116,40 +101,38 @@ plmdca_inst = plmdca.PlmDCA(
     max_iterations = 500,
 )
 
-if preprocess:
-    plm_out_file = '%s%s_%s_pydca_plm_preproc_di.npy' % (out_dir, pfam_id, method)
-else:
-    plm_out_file = '%s%s_%s_pydca_plm_di.npy' % (out_dir, pfam_id, method)
+# SAVE PYDCA MF
+plm_out_file = '%s%s_%s_pydca_plm_di.npy' % (out_dir, pfam_id, method)
 
-if 0: #os.path.exists(plm_out_file):
-    plmdca_scores = np.load(plm_out_file)
-else:
-    # compute PLM DCA scores summarized by various methods:
-    # FN_APC: Frobenius norm and average product corrected
-    # DI_APC: raw DI with average product correction
-    # DI: raw DI score
-    # FN: Frobenius norm of raw DI
-    if method == "DI_APC":
-        plmdca_scores = plmdca_inst.compute_sorted_DI_APC()
-    if method == "DI":
-        plmdca_scores = plmdca_inst.compute_sorted_DI()
-    if method == "FN_APC":
-          plmdca_scores = plmdca_inst.compute_sorted_FN_APC()
-    if method == "FN":
-        plmdca_scores = plmdca_inst.compute_sorted_FN()
 
+# compute MF DCA scores summarized by various methods:
+# FN_APC: Frobenius norm and average product corrected
+# DI_APC: raw DI with average product correction
+# DI: raw DI score
+# FN: Frobenius norm of raw DI
+if method == "DI_APC":
+    plmdca_scores = plmdca_inst.compute_sorted_DI_APC()
+if method == "DI":
+    plmdca_scores = plmdca_inst.compute_sorted_DI()
+if method == "FN_APC":
+    plmdca_scores = plmdca_inst.compute_sorted_FN_APC()
+if method == "FN":
+    plmdca_scores = plmdca_inst.compute_sorted_FN()
 
 
 # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
 
+for site_pair, score in plmdca_scores[:5]:
+    print(site_pair, score)
 
+   
+# Save the scores for future use/comparison
 np.save(plm_out_file, plmdca_scores)
 
-
 # save processed data
-np.save('%s/%s_pydca_PLM_s0.npy' 		% (processed_data_dir, pfam_id), s0)
-np.save('%s/%s_pydca_PLM_ref_seq_mapping.npy' 	% (processed_data_dir, pfam_id), plmdca_inst.__refseq_mapping_dict)
-np.save('%s/%s_pydca_PLM_refseq.npy' 		% (processed_data_dir, pfam_id), npy_refseq)
-np.save('%s/%s_pydca_PLM_tpdb.npy' 		% (processed_data_dir, pfam_id), sbm_tpdb)
+np.save('%s/%s_pydca_PLM_s0.npy' 		% (processed_data_dir, pfam_id), s)
+#np.save('%s/%s_pydca_PLM_ref_seq_mapping.npy' 	% (processed_data_dir, pfam_id), plmdca_inst.__refseq_mapping_dict)
+#np.save('%s/%s_pydca_PLM_refseq.npy' 		% (processed_data_dir, pfam_id), npy_refseq)
+np.save('%s/%s_pydca_PLM_tpdb.npy' 		% (processed_data_dir, pfam_id), tpdb)
 
 print('Complete...')
