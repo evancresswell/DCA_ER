@@ -47,6 +47,140 @@ from prody import *
 #    
 #    return seq
 #"""
+
+
+def pdb2msa(pdb_file, pdb_dir, create_new=True):
+    pdb_id = os.path.basename(pdb_file)[3:7]
+
+    # if you just want to load it
+    if os.path.exists('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id)) and not create_new:
+        prody_df = pd.read_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
+        try:
+            pfam_accession = prody_df.iloc[0]['accession']
+            print('fetch %s MSA' % pfam_accession)
+    
+            # Download the Pfam MSA with prody
+            fasta_file = fetchPfamMSA(pfam_accession, format='fasta', timeout=10000)
+            print(fasta_file)
+            return [fasta_file, prody_df]
+        except Exception as e:
+            print('Error during fetPfamMSA: ',e)
+            return [prody_df]
+        return [fasta_file, prody_df] 
+
+
+
+    print(pdb_id)
+    chain_matches = {}
+    for record in SeqIO.parse(pdb_file, "pdb-seqres"):
+        print("Record id %s, chain %s" % (record.id, record.annotations["chain"]))
+        print(record.dbxrefs)
+
+    pdb_model = pdb_parser.get_structure(str(pdb_id), pdb_file)[0]
+    prody_columns =  ['PDB ID' , 'Chain', 'Polypeptide Index', 'Pfam', 'accession', 'class', 'id', 'type', 'PDB Sequence']
+    float_values = ['bitscore', 'ind_evalue', 'cond_evalue']
+    int_values = ['ali_end', 'ali_start', 'end', 'hmm_end', 'hmm_start', 'start']
+ 
+    prody_df = None
+    prody_dict = {}
+    for chain in pdb_model.get_chains():
+        ppb = PPBuilder().build_peptides(chain)
+        if len(ppb) == 0: 
+            print('\nChain %s has no polypeptide sequence\n' % chain.get_id())
+            continue
+        for i, pp in enumerate(ppb):
+            poly_seq = list()
+            for char in str(pp.get_sequence()):
+                poly_seq.append(char)
+            print('\nChain %s polypeptide %d (length %d): ' % (chain.get_id(), i, len(''.join(poly_seq))),''.join(poly_seq))
+
+            try:
+                prody_search = searchPfam(''.join(poly_seq), timeout=300)
+                print(prody_search)
+            except Exception as e:
+                print('Error with prody.searchPfam: ', e, '\n')
+                continue
+
+             
+            for pfam_key in prody_search.keys():
+                ps = prody_search[pfam_key]
+           
+                # prody_alignment_values = list(ps['locations'].values())
+                prody_alignment_values = []
+                for l_key in ps['locations'].keys():
+                    if l_key in float_values:
+                        prody_alignment_values.append(float(ps['locations'][l_key]))
+                    elif l_key in int_values:
+                        prody_alignment_values.append(int(ps['locations'][l_key]))
+                    else:
+                        prody_alignment_values.append(ps['locations'][l_key])
+
+                prody_lst = [pdb_id, chain.get_id(), i, pfam_key, ps['accession'], ps['class'], ps['id'], ps['type'], ''.join(poly_seq)] + prody_alignment_values
+
+                if prody_df is None:
+                    prody_alignment_columns = [key for key in ps['locations'].keys()]
+                    prody_df = pd.DataFrame([prody_lst], columns = prody_columns + prody_alignment_columns)
+                else:
+                    prody_df.loc[len(prody_df.index)] = prody_lst
+                #else:
+                #    print('Pfam %s already found and the match is not an improvement' % pfam_key)
+
+    # reorder df to get best matches on top.
+    if prody_df is None:
+        print('PDB2MSA ERROR: No pdb matches found using prody.searchPfam for any of the chains/polypeptide sequences. !!')
+        sys.exit(23)
+    print(prody_df.head())
+    print('sorting ProdyDataframe')
+    
+    prody_df = prody_df.sort_values(by='bitscore', ascending = False).sort_values(by='ind_evalue') # could be cond_evalue??
+    prody_df = prody_df.reset_index(drop=True)
+    print(prody_df.head())
+
+    prody_df.to_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
+
+    try:
+        pfam_accession = prody_df.iloc[0]['accession']
+        print('fetch %s MSA' % pfam_accession)
+
+        # Download the Pfam MSA with prody
+        fasta_file = fetchPfamMSA(pfam_accession, format='fasta', timeout=10000)
+        print(fasta_file)
+        return [fasta_file, prody_df]
+    except Exception as e:
+        print('Error during fetPfamMSA: ',e)
+        return [prody_df]
+
+def get_tpdb(s, prody_df):
+    from ecc_tools import hamming_distance
+    # Requires DataFrame from data_processing.pdb2msa() function as input
+    ali_start_indx = int(prody_df['ali_start'])-1
+    ali_end_indx = int(prody_df['ali_end'])-1
+
+    pfam_start_indx = int(prody_df['start'])-1
+    pfam_end_indx = int(prody_df['end'])-1
+
+    alignment_len =  ali_end_indx - ali_start_indx
+    aligned_pdb_str  = prody_df['PDB Sequence'][ali_start_indx:ali_end_indx]
+    #print(alignment_len, len(aligned_pdb_str), aligned_pdb_str)
+
+    min_ham = alignment_len
+    min_indx = -1
+    for i, seq in enumerate(s):
+        gap_seq = seq == '-'  # returns True/False for gaps/no gaps
+        subject = seq[~gap_seq]
+        seq_str = ''.join(subject).upper()
+        aligned_seq_str = seq_str[pfam_start_indx : pfam_end_indx]
+        #print(i, len(aligned_seq_str), aligned_seq_str)
+        if len(aligned_seq_str) != alignment_len:
+            continue
+        ham_dist = hamming_distance(aligned_pdb_str, aligned_seq_str)                                          
+        if ham_dist < min_ham:
+            min_ham = ham_dist
+            min_indx = i
+            continue                                                                                 
+    return min_indx
+
+
 def query_pdb(msa, i):
     seq = msa[i]
     gap_seq = seq == '-'  # returns True/False for gaps/no gaps
@@ -220,58 +354,6 @@ def find_best_pdb(pfam_id, data_path, pdb_dir, n_cpu=20):
     pdb_matched_matched_sorted = pdb_matched_sorted.reset_index(drop=True)
     print('Sorted PDB matches (%d matches): \n' % len(pdb_matched_sorted), pdb_matched_sorted.head())
     return pdb_matched_sorted
-
-
-
-def pdb2msa(pdb_file):
-    pdb_id = os.path.basename(pdb_file)[3:7]
-    print(pdb_id)
-    chain_matches = {}
-    for record in SeqIO.parse(pdb_file, "pdb-seqres"):
-        print("Record id %s, chain %s" % (record.id, record.annotations["chain"]))
-        print(record.dbxrefs)
-
-    pdb_model = pdb_parser.get_structure(str(pdb_id), pdb_file)[0]
-    prody_columns =  ['PDB ID' , 'Chain', 'accession', 'class', 'id', 'locations', 'type']
-    prody_df = pd.DataFrame(columns = prody_columns)
-    for chain in pdb_model.get_chains():
-        ppb = PPBuilder().build_peptides(chain)
-        for i, pp in enumerate(ppb):
-            poly_seq = list()
-            for char in str(pp.get_sequence()):
-                poly_seq.append(char)
-            print('Chain %s polypeptide %d: ' % (chain.get_id(), i),''.join(poly_seq))
-
-        try:
-            prody_search = searchPfam(''.join(poly_seq))
-            print(prody_search)
-        except(HTTPError):
-            print('HTTPError')
-            pass
-        
-        prody_dict = {}
-        for pfam_key in prody_search.keys():
-            ps = prody_search[pfam_key]
-            if pfam_key not in prody_df.index:
-                prody_df.loc[pfam_key] = [pdb_id, chain.get_id(), ps['accession'], ps['class'], ps['id'], ps['locations'], ps['type']]
-            elif ps['locations']['bitscore'] > prody_df.loc[pfam_key]['locations']['bitscore'] and ps['locations']['ind_evalue'] < prody_df.loc[pfam_key]['locations']['ind_evalue']:
-                prody_df.loc[pfam_key] = [pdb_id, chain.get_id(), ps['accession'], ps['class'], ps['id'], ps['locations'], ps['type']]
-            else:
-                print('Pfam %s already found and the match is not an improvement' % pfam_key)
-            print(prody_df.head())
-        #for key in prody_search.keys():
-        #    msa_path = fetchPfamMSA(prody_search[key])
-        #    print(msa_path)        
-
-    if 1:
-        # load the Pfam MSA from biowulf database
-        fasta_file = fetchPfamMSA(prody_df.index[0], format='fasta')
-        print(fasta_file)
-    else:
-        # Download the Pfam MSA with prody
-        for pfam_id in prody_search.keys():
-            msa_file = fetchPfamMSA(prody_search[pfam_id]['accession'])
-            print(msa_file)
 
 
 
@@ -618,7 +700,217 @@ def load_msa(data_path, pfam_id):
         return
     return s
 
-def data_processing_new(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
+
+def data_processing_pdb2msa(data_path, pdb_df,gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
+                        conserved_cols=0.8, printing=True, out_dir='./', pdb_dir='./', letter_format=False, 
+                        remove_cols=True, create_new=True, n_cpu=2):
+    pfam_id = pdb_df['Pfam']
+    pdb_seq = pdb_df['PDB Sequence']
+    pdb_id = pdb_df['PDB ID']
+    print('PDB ID: %s, Pfam ID: %s' % (pdb_id, pfam_id))
+
+    np.random.seed(123456789)
+    #if not create_new and os.path.exists("%s/%s_pdb_df.csv" % (out_dir, pfam_id)):
+    if 0:
+        print('Because create_new is False and files exist we will load preprocessed data:')
+        if remove_cols:
+            s = np.load("%s/%s_%s_preproc_msa.npy" % (out_dir, pfam_id, pdb_id))
+            s_index = np.load("%s/%s_%s_preproc_sindex.npy" % (out_dir, pfam_id, pdb_id))
+            removed_cols = np.load("%s/%s_%s_removed_cols.npy" % (out_dir, pfam_id, pdb_id))
+            ref_seq = np.load("%s/%s_%s_preproc_refseq.npy" % (out_dir, pfam_id, pdb_id))
+        else: 
+            s = np.load("%s/%s_%s_allCols_msa.npy" % (out_dir, pfam_id, pdb_id))
+            s_index = np.load("%s/%s_%s_allCols_sindex.npy" % (out_dir, pfam_id, pdb_id)) 
+            removed_cols = np.load("%s/%s_%s_removed_cols.npy" % (out_dir, pfam_id, pdb_id))
+            ref_seq = np.load("%s/%s_%s_allCols_refseq.npy" % (out_dir, pfam_id, pdb_id))
+
+        if not letter_format and isinstance(s[0][0], str):
+            s = convert_letter2number(s)
+
+      
+    
+    # Load MSA
+    s = load_msa(data_path, pfam_id)
+    orig_seq_len = s.shape[1]
+    print('Original Sequence length: ', orig_seq_len)
+
+    
+    # Using given MSA find best matching PDB structure from all available MSA sequences.
+    
+    if printing:
+        print("#\n\n--------------------- Find PDB Sequence in MSA ---------------#")
+        
+
+    # Find PDB seq in MSA current
+    tpdb = get_tpdb(s, pdb_df) # requires prody.searchPfam DF from pdb2msa as input
+    if tpdb == -1:
+        print('No matching alignment to %s found in %s\n' % (pdb_id, pfam_id), pdb_df)
+        return None
+
+
+    if printing:
+        print("#--------------------------------------------------------------#\n\n")
+    
+    
+    if printing:
+        print("#\n\n-------------------------Remove Gaps--------------------------#")
+        print('Shape of s is : ', s.shape)
+        print("s = \n", s)
+
+
+    gap_pdb = s[tpdb] == '-'  # returns True/False for gaps/no gaps
+    s = s[:, ~gap_pdb]        # removes gaps
+
+    s_index = np.arange(s.shape[1])
+
+    if printing:
+        print("s[tpdb] shape is ", s[tpdb].shape)
+        print("s = \n", s)
+        print("though s still has gaps, s[%d] does not:\n" % (tpdb), s[tpdb])
+        print("s shape is ", s.shape)
+        print("Saving indices of reference sequence s[%d](length=%d):\n" % (tpdb, s_index.shape[0]), s_index)
+        print("#--------------------------------------------------------------#\n\n")
+
+    lower_cols = np.array([i for i in range(s.shape[1]) if s[tpdb, i].islower()])
+    if printing:
+        print("removing non aligned (lower case) columns in subject sequence:\n ", lower_cols, '\n')
+        
+        
+    # lower case removal reference: https://onlinelibrary.wiley.com/doi/full/10.1002/1097-0134%2820001101%2941%3A2%3C224%3A%3AAID-PROT70%3E3.0.CO%3B2-Z
+    # upper = np.array([x.isupper() for x in s[tpdb]])
+    # print('select only column presenting as uppercase at the first row')
+    # upper = np.array([x.isupper() for x in s[0]])
+    # s = s[:,upper]
+
+
+    # --- remove duplicates before processing (as done in pydca) --- #
+    if 1:
+        dup_rows = []
+        s_no_dup = []
+        for i, row in enumerate(s):
+            if [a for a in row] in s_no_dup:
+                if i != tpdb:   # do not want to remove reference sequence
+                    dup_rows.append(i)
+                else:           # we need to add the reference sequence back in even if its a duplicate row.    
+                    s_no_dup.append([a for a in row])
+            else:
+                s_no_dup.append([a for a in row])
+        if printing:
+            print('found %d duplicates! (Removing...)' % len(dup_rows))
+        s, tpdb = remove_seqs_list(s, tpdb, dup_rows)
+    # -------------------------------------------------------------- #
+
+    
+    # - Removing bad sequences (>gap_seqs gaps) -------------------- #    
+    s, tpdb = remove_bad_seqs(s, tpdb, gap_seqs)  # removes all sequences (rows) with >gap_seqs gap %
+    
+    if printing:
+        print('\nAfter removing bad sequences...\ntpdb (s_ipdb) is : ', tpdb)
+        print(s.shape)
+    # -------------------------------------------------------------- #
+
+    # - Finding bad columns (>gap_cols) -------------------- #
+    bad_cols = find_bad_cols(s, gap_cols)
+    if printing:
+        print('found bad columns :=', bad_cols)
+    # ------------------------------------------------------ #
+
+    # ------------ Replace Bad Amino Acid Letters if valid ones, two strategies --------- #
+    if 1: # replace aa with potential correct aa
+        # 2018.12.24:
+        # replace 'Z' by 'Q' or 'E' with prob
+        # print('replace Z by Q or E')
+        s = find_and_replace(s, 'Z', np.array(['Q', 'E']))
+
+        # replace 'B' by Asparagine (N) or Aspartic (D)
+        # print('replace B by N or D')
+        s = find_and_replace(s, 'B', np.array(['N', 'D']))
+
+        # replace 'X' as amino acids with prob
+        # print('replace X by other aminoacids')
+        amino_acids = np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', \
+                                'T', 'V', 'W', 'Y', 'U'])
+        s = find_and_replace(s, 'X', amino_acids)
+    else: # replace aa with gap '-' (like in pydca)
+        if printing:
+            print('\n\nUsing PYDCA\'s method of replacing Z, B, and X with - instead of likely alternates...\n\n')
+        s = find_and_replace(s, 'Z', np.array(['-']))
+        s = find_and_replace(s, 'B', np.array(['-']))
+        s = find_and_replace(s, 'X', np.array(['-']))
+    # ----------------------------------------------------------------------------------- #
+
+    
+    # --------------------- Find Conserved Columns ------------------------------------ #
+    conserved_cols = find_conserved_cols(s, conserved_cols)
+    if printing:
+        print("found conserved columns (80% repetition):\n", conserved_cols)
+    # --------------------------------------------------------------------------------- #
+
+    
+    # ----------------------- Remove all Bad Columns ---------------------------------- #
+
+    removed_cols = np.array(list(set(bad_cols) | set(conserved_cols)))
+
+    removed_cols = np.array(list(set(removed_cols) | set(lower_cols)))
+        
+    # remove columns in which references sequence is different from matched PDB sequence
+    #mismatch_cols = [i for i,a in enumerate(ref_seq) if a != pdb_seq[i]]
+    #removed_cols = np.array(list(set(removed_cols) | set(mismatch_cols)))
+
+    if printing:
+        print("We remove conserved and bad columns with, at the following indices (len %d):\n" % len(removed_cols), removed_cols)
+    # ----------------------- Remove all Bad Columns ---------------------------------- #
+
+
+    # info still pased through removed_cols but this way we can interact with full msa if remove_cols is False
+    if remove_cols:
+        s = np.delete(s, removed_cols, axis=1)
+        s_index = np.delete(s_index, removed_cols)
+
+    if printing and remove_cols:
+        print("Removed Columns...")
+        print("s now has shape: ", s.shape)
+        print("s_index (length=%d) = \n" % s_index.shape[0], s_index)
+        print("In data processing Ref Seq (shape=", s[tpdb].shape, "): \n", s[tpdb])
+
+    # Convert S to number format (number representation of amino acids)
+    if not letter_format:
+        # convert letter to number:
+        s = convert_letter2number(s)
+    print(s)
+
+    # replace lower probs by higher probs 
+    for i in range(s.shape[1]):
+        s[:, i] = replace_lower_by_higher_prob(s[:, i], prob_low)
+
+    # min_res = min_res(s)
+    # print(min_res)
+
+    np.save("%s/%s_%s_removed_cols.npy" % (out_dir, pfam_id, pdb_id), removed_cols)
+    if remove_cols:
+        np.save("%s/%s_%s_preproc_msa.npy" % (out_dir, pfam_id, pdb_id), s)
+        np.save("%s/%s_%s_preproc_sindex.npy" % (out_dir, pfam_id, pdb_id), s_index)
+        np.save("%s/%s_%s_preproc_refseq.npy" % (out_dir, pfam_id, pdb_id), s[tpdb])
+    else:
+        np.save("%s/%s_%s_allCols_msa.npy" % (out_dir, pfam_id, pdb_id), s)
+        np.save("%s/%s_%s_allCols_sindex.npy" % (out_dir, pfam_id, pdb_id), s_index)
+        np.save("%s/%s_%s_allCols_refseq.npy" % (out_dir, pfam_id, pdb_id), s[tpdb])
+
+
+
+    # - Removing bad sequences (>gap_seqs gaps) -------------------- #
+    if printing:
+        print(s.shape)
+        print("In Data Processing Final Reference Sequence (shape=", s[tpdb].shape, "): \n", s[tpdb])
+
+    return [s, removed_cols, s_index, tpdb]
+
+
+# =========================================================================================
+
+
+
+def data_processing_msa2pdb(data_path, pfam_id, index_pdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
                         conserved_cols=0.8, printing=True, out_dir='./', pdb_dir='./', letter_format=False, 
                         remove_cols=True, create_new=True, n_cpu=4):
     n_cpu = min(10, n_cpu-2) 

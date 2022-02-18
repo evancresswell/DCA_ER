@@ -14,7 +14,7 @@ from matplotlib import colors as mpl_colors
 import random
 import xml.etree.ElementTree as et
 from pathlib import Path
-from data_processing import data_processing, find_and_replace, data_processing_new, load_msa
+from data_processing import data_processing, find_and_replace, data_processing_msa2pdb, load_msa
 from sklearn.metrics import roc_curve as roc_scikit
 from sklearn.metrics import auc, precision_recall_curve
 
@@ -60,7 +60,6 @@ def no_diag(mat, diag_l, s_index=None, make_big=False):
                 if abs(s_index[row]-s_index[col]) > diag_l:
                     new_mat[row, col] = mat[row ,col]    
     return new_mat
-
 
 def align_pairs_local(ref_seq, other_seq, score_only = False):
     """Performs pairwise alignment give two sequences
@@ -388,7 +387,7 @@ def npy2fa_new(data_path, pfam_id, pdb_data_dir, index_pdb=0, n_cpu=4, create_ne
     
 
     s0, removed_cols, s_index, tpdb, pdb_select \
-    = data_processing_new(data_path, pfam_id, index_pdb=0,gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
+    = data_processing_new_msa2pdb(data_path, pfam_id, index_pdb=0,gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
                         conserved_cols=0.9, printing=True, out_dir=processed_data_dir, pdb_dir=pdb_data_dir, letter_format=True, 
                         remove_cols=False, create_new=create_new, n_cpu=n_cpu)
     
