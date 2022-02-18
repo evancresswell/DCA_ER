@@ -729,8 +729,9 @@ def pdb2msa(pdb_file):
         for pfam_id in prody_search.keys():
             msa_file = fetchPfamMSA(prody_search[pfam_id]['accession'])
             print(msa_file)
-    
-    
+
+
+      
 
 def contact_map_new(pdb_id, pdb_range, removed_cols, queried_seq, mismatches, pdb_out_dir='./', printing=True):
     if printing:
@@ -852,6 +853,7 @@ def di_dict2mat(pydca_score, s_index, curated_cols = None, full_contact=False, a
         
     return pydca_di
 
+
 # print("Direct Information from Expectation reflection:\n",di)
 def no_diag(mat, diag_l, s_index=None, make_big=False):
     rows, columns = mat.shape
@@ -868,6 +870,66 @@ def no_diag(mat, diag_l, s_index=None, make_big=False):
                 if abs(s_index[row]-s_index[col]) > diag_l:
                     new_mat[row, col] = mat[row ,col]    
     return new_mat
+
+
+
+def contact_map_pdb2msa(pdb_df, pdb_file, removed_cols, pdb_out_dir='./', printing=True):
+    if printing:
+        print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
+
+    pdb_id = pdb_df['PDB ID']
+    # pdb_file = pdb_list.retrieve_pdb_file(pdb_id)
+
+    pdb_start = pdb_df['ali_start'] - 1
+    pdb_end = pdb_df['ali_end'] 
+    pdb_chain = pdb_df['Chain']
+    pdb_pp_index = pdb_df['Polypeptide Index']
+
+    pdb_model = pdb_parser.get_structure(str(pdb_id), pdb_file)[0]
+    found_pp_match = False
+    for chain in pdb_model.get_chains():
+        if chain.get_id() == pdb_chain:
+            pass
+        else:
+            continue
+        ppb = PPBuilder().build_peptides(chain)
+
+        # # PYDCA method for getting polypeptide sequence...
+        poly_seq_new = [res.get_resname().strip() for res in filter_residues(pdb_model[chain.get_id()].get_list())]
+        print('new poly seq list: ', ''.join(poly_seq_new))
+
+        # Get full list of CA coords from poly_seq
+        poly_seq = list()
+        pp_ca_coords_full = list()
+        for i, pp in enumerate(ppb):
+            if i == pdb_pp_index:
+                pass
+            else:
+                continue
+            for char in str(pp.get_sequence()):
+                poly_seq.append(char)
+            poly_seq_ca_atoms = pp.get_ca_list()
+            pp_ca_coords_full.extend([a.get_coord() for a in poly_seq_ca_atoms])
+
+        print('\nChain ', chain, ':\n', ''.join(poly_seq))
+        poly_seq_range = poly_seq[pdb_start:pdb_end]
+        print( '\n',''.join(poly_seq_range), '\n')
+
+    n_amino_full = len(pp_ca_coords_full)
+
+    # Extract coordinates and sequence char in PDB-range\
+    pp_ca_coords_full_range = pp_ca_coords_full[pdb_start:pdb_end]
+
+    ct_full = distance_matrix(pp_ca_coords_full, pp_ca_coords_full)
+
+
+
+    poly_seq_curated = np.delete(poly_seq_range, removed_cols)
+    pp_ca_coords_curated = np.delete(pp_ca_coords_full_range, removed_cols, axis=0)
+    ct = distance_matrix(pp_ca_coords_curated, pp_ca_coords_curated)
+
+    return ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range, poly_seq, pp_ca_coords_curated, pp_ca_coords_full_range
+
 
 
 def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printing=True, pdb_out_dir='./', refseq=None):

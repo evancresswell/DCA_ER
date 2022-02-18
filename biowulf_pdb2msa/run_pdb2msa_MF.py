@@ -115,106 +115,42 @@ print('Done Preprocessing Data.....')
 
 pfam_id = pdb2msa_row[1]['Pfam']
 pdb_id = pdb2msa_row[1]['PDB ID']
+pdb_chain = pdb2msa_row[1]['Chain']
 
 # number of positions
 n_var = s0.shape[1]
 n_seq = s0.shape[0]
-
 print("Number of residue positions:",n_var)
 print("Number of sequences:",n_seq)
 
-# number of aminoacids at each position
-mx = np.array([len(np.unique(s0[:,i])) for i in range(n_var)])
-#mx = np.array([m for i in range(n_var)])
-print("Number of different amino acids at each position",mx)
+print(s0.shape, '\n\n\n')
 
-mx_cumsum = np.insert(mx.cumsum(),0,0)
-i1i2 = np.stack([mx_cumsum[:-1],mx_cumsum[1:]]).T 
-# print("(Sanity Check) Column indices of first and (",i1i2[0],") and last (",i1i2[-1],") positions")
-# print("(Sanity Check) Column indices of second and (",i1i2[1],") and second to last (",i1i2[-2],") positions")
-
-
-# number of variables
-mx_sum = mx.sum()
-print("Total number of variables",mx_sum)
-
-# number of bias term
-n_linear = mx_sum - n_var
-
-onehot_encoder = OneHotEncoder(sparse=False,categories='auto')
-# s is OneHot encoder format, s0 is original sequnce matrix
-s = onehot_encoder.fit_transform(s0)
-# print("Amino Acid sequence Matrix\n",s0)
-# print("OneHot sequence Matrix\n",s)
-# print("An individual element of the OneHot sequence Matrix (size:",
-#      s.shape,") --> ",s[0], " has length ",s[0].shape)
-
-# Define wight matrix with variable for each possible amino acid at each sequence position
-w = np.zeros((mx.sum(),mx.sum())) 
-h0 = np.zeros(mx.sum())
-
-import sys
-import numpy as np
-from scipy import linalg
-from sklearn.preprocessing import OneHotEncoder
-import expectation_reflection as ER
-from direct_info import direct_info
-from joblib import Parallel, delayed
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+print(pdb2msa_row[1])
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+from inference_dca import direct_info_dca
+print('Final MSA shape before MF calculation: ', s0.shape)
+seq_wt_file = None
+seq_wt_file = '%s/seq_weight_%s_%s.npy' % (processed_data_dir, pdb_id, pfam_id)
 
 
-# Expectation Reflection
-#=========================================================================================
-def predict_w(s,i0,i1i2,niter_max,l2):
-    #print('i0:',i0)
-    i1,i2 = i1i2[i0,0],i1i2[i0,1]
+mf_di, fi, fij, c, cinv, w, w2d, fi_pydca, fij_pydca, c_pydca, c_inv_pydca, \
+w_pydca, w2d_pydcak, di_pydca, ma_inv,seq_ints\
+= direct_info_dca(s0, seq_wt_outfile=seq_wt_file)
 
-    x = np.hstack([s[:,:i1],s[:,i2:]])
-    y = s[:,i1:i2]
+print(c_pydca[0])
+print(c[0])
+diff = c_pydca - c
+print(diff)
+print('difference between c_pydca and c: ', np.linalg.norm(diff))
 
-    h01,w1 = ER.fit(x,y,niter_max,l2)
 
-    return h01,w1
+# -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- #
+if 0: # we can just do this in postprocessing
+    if not removing_cols:
+        MF_di = np.delete(mf_di, cols_removed,0)
+        MF_di = np.delete(MF_di, cols_removed,1)
 
-w_file = "%s/%s_%s_w.npy" % (processed_data_dir, pdb_id, pfam_id)
-if os.path.exists(w_file) and not create_new:
-    w = np.load(w_file)
-else:
-    #-------------------------------
-    # parallel
-    start_time = timeit.default_timer()
-    #res = Parallel(n_jobs = 4)(delayed(predict_w)\
-    #res = Parallel(n_jobs = 8)(delayed(predict_w)\
-    res = Parallel(n_jobs = 32)(delayed(predict_w)\
-            (s,i0,i1i2,niter_max=10,l2=100.0)\
-            for i0 in range(n_var))
-
-    run_time = timeit.default_timer() - start_time
-    print('run time:',run_time)
-    ## This above line seems wrong, seems like the following for loop should be moved up?? not sure if this is some 
-    ## python implementation or just wrong
-    #-------------------------------
-    for i0 in range(n_var):
-        i1,i2 = i1i2[i0,0],i1i2[i0,1]
-
-        h01 = res[i0][0]
-        w1 = res[i0][1]
-
-        h0[i1:i2] = h01
-        w[:i1,i1:i2] = w1[:i1,:]
-        w[i2:,i1:i2] = w1[i1:,:]
-
-    # make w symmetric
-    w = (w + w.T)/2.
-
-# Verify that w is symmetric (sanity test)
-print("Dimensions of w: ",w.shape)
-np.save(w_file, w)
-
-if not create_new and os.path.exists("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id)):
-    di = np.load("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id))
-else:
-    di = direct_info(s0,w)
-    np.save("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id), di)
-print(di)
-print(di.shape)
-print(len(s_index))
+mf_file = "%s/%s_%s_MF_di.npy" % (out_dir, pdb_id, pfam_id)
+np.save(mf_file, mf_di)
+print('Complete...')
