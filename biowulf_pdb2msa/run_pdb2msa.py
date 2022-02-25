@@ -39,7 +39,7 @@ from prody import *
 
 
 
-create_new = False
+create_new = True
 printing = True
 removing_cols = True
 
@@ -102,7 +102,7 @@ for ir, pdb2msa_row in enumerate(prody_df.iterrows()):
                                conserved_cols=0.8, printing=True, out_dir=processed_data_dir, pdb_dir=pdb_dir, letter_format=False,
                                remove_cols=True, create_new=True, n_cpu=min(2, n_cpus))
         if dp_result is not None:
-            [s0, removed_cols, s_index, tpdb] = dp_result
+            [s0, removed_cols, s_index, tpdb, pdb_s_index] = dp_result
             break
         else: 
             continue
@@ -111,6 +111,9 @@ for ir, pdb2msa_row in enumerate(prody_df.iterrows()):
         print('moving on.. ')
         pass
 
+if dp_result is None:
+    print('None of the available prody pdb search found matching alignments... Exiting..')
+    sys.exit()
 print('Done Preprocessing Data.....')
 
 pfam_id = pdb2msa_row[1]['Pfam']

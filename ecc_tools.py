@@ -42,6 +42,47 @@ STANDARD_RESIDUES = {
         'LEU', 'LYS', 'MET', 'PHE', 'PRO',
         'SER', 'THR', 'TRP', 'TYR', 'VAL')
 }
+
+
+# Return the Hamming distance between string1 and string2.
+# string1 and string2 should be the same length.
+def hamming_distance(string1, string2): 
+    # Start with a distance of zero, and count up
+    distance = 0
+    # Loop over the indices of the string
+    L = len(string1)
+    for i in range(L):
+        # Add 1 to the distance if these two characters are not equal
+        if string1[i] != string2[i]:
+            distance += 1
+    # Return the final count of differences
+    return distance
+
+def window(fseq, window_size=5):
+    for i in range(len(fseq) - window_size + 1):
+        yield fseq[i:i+window_size]
+
+
+def filter_residues(residues, biomolecule='PROTEIN'):
+    """Filters the standared residues from others (e.g. hetatom residues).
+    Parameters
+    ----------
+        residues : list
+            A list of Biopython PDB structure residues objects.
+    Returns
+    -------
+        standard_residues : list
+            A lif of Biopython PDB structure standared residues (after hetro
+            atom residues are filtered).
+    """
+    biomolecule = biomolecule.strip().upper()
+    standard_residues = []
+    for res in residues:
+        if res.get_resname().strip() in STANDARD_RESIDUES[biomolecule]:
+            if not res.id[0].strip(): standard_residues.append(res) # filter out hetro residues
+    return standard_residues
+
+
 # -------------------------------------------------------------------------------------------------------------------- #
 # -------------------------------------------------------------------------------------------------------------------- #
 # print("Direct Information from Expectation reflection:\n",di)
@@ -494,246 +535,6 @@ def write_FASTA(ref_seq, msa, pfam_id, number_form=True, processed=True, path='.
             ref_letters = msa_letters[ref_seq]
     else:
         msa_letters = msa
-        ref_array = np.asarray(ref_seq)
-        gap_ref = ref_array == '-'  # remove gaps from reference array
-        ref_letters = ref_array[~gap_ref]
-        msa_letters = np.delete(msa_letters, gap_ref, axis=0)
-    # First save reference sequence to FASTA file
-    ref_str = ''
-    ref_list = ref_letters.tolist()
-    ref_str = ref_str.join(ref_list)
-    if processed:
-        with open(ref_outfile, 'w') as fh:
-            fh.write('>{}\n{}\n'.format(pfam_id + ' | PP REFERENCE', ref_str))
-    else:
-        print('Writing Un-processed Reference sequence..\nOriginal Reference Sequence')
-        with open(ref_outfile, 'w') as fh:
-            fh.write('>{}\n{}\n'.format(pfam_id + ' | PP REFERENCE', ref_str))
-
-    # Next save MSA to FAST file
-
-    with open(msa_outfile, 'w') as fh:
-        for seq_num, seq in enumerate(msa_letters):
-            msa_list = seq.tolist()
-            msa_str = ''
-            msa_str = msa_str.join(msa_list)
-            fasta_header = pfam_id
-            fh.write('>{}\n{}\n'.format(fasta_header, msa_str))
-
-    # Return MSA and Reference FASTA file names
-    return msa_outfile, ref_outfile
-# -------------------------------------------------------------------------------------------------------------------- #
-
-# -------------------------------------------------------------------------------------------------------------------- #
-def split_and_shift_contact_pairs(list_of_contacts):
-    """
-    Separating contacting site pairs into two lists: One containing all first entries (xdata), and the other containing
-    all second entries (ydata). Note that, each site pair is shifted by 1 so as to make them ready for visualization
-    (since the sites have been counted starting from 0)
-
-    :param list_of_contacts:
-        list_of_contacts : list/tuple A list or tuple containing tuples of contacting site pairs.
-    :return:
-        xdata : list List containing shifted first entries of site pairs as obtained from list_of_contacts
-                parameter.
-        ydata : list List containing shifted second entries of site pairs as obtained from list_of_contacts parameter
-    """
-
-    xdata = list()
-    ydata = list()
-    for first, second in list_of_contacts:
-        xdata.append(first + 1)  # shift indexing by 1 for visualization (output)
-        ydata.append(second + 1)
-
-    return xdata, ydata
-
-
-def get_score_df(df_diff_full):
-    # pass dataframes generated in gen_method_column_df.py
-    # creates Dataframe for each method
-    # creates rgba list for 3 methods
-    printing = False
-    df_ER = df_diff_full.loc[df_diff_full['method'] == 'ER']
-    df_MF = df_diff_full.loc[df_diff_full['method'] == 'MF']
-    df_PLM = df_diff_full.loc[df_diff_full['method'] == 'PLM']
-
-    # print(df_MF.loc[df_MF['best_method']=='MF' ].loc[df_MF['AUC']<0.]['Score'])
-    if printing:
-        print(len(df_ER['Score']))
-        print(len(df_PLM['Score']))
-        print(len(df_MF['Score']))
-
-    common = df_ER.merge(df_MF, on='Pfam')
-    print(len(common))
-    df_ER = df_ER[df_ER.Pfam.isin(common.Pfam)].dropna()
-    df_PLM = df_PLM[df_PLM.Pfam.isin(common.Pfam)].dropna()
-    df_MF = df_MF[df_MF.Pfam.isin(common.Pfam)].dropna()
-
-    if printing:
-        print(len(df_ER['Score']))
-        print(len(df_PLM['Score']))
-        print(len(df_MF['Score']))
-    df_ER = df_ER.sort_values(by='Pfam')
-    df_MF = df_MF.sort_values(by='Pfam')
-    df_PLM = df_PLM.sort_values(by='Pfam')
-
-    if printing:
-        print(df_ER['Pfam'])
-        print(df_MF['Pfam'])
-        print(df_PLM['Pfam'])
-
-    df_winner = df_diff_full[df_diff_full.Pfam.isin(common.Pfam)].dropna()
-    df_winner = df_winner.loc[df_winner['best_method'] == df_winner['method']]
-    df_winner = df_winner.sort_values(by='Pfam')
-    scores = df_winner['Score'].values.tolist()
-    color_dict = {'ER': 'blue', 'PLM': 'green', 'MF': 'orange'}
-    colors = [color_dict[c] for c in df_ER['best_method'].values.tolist()]
-    print(len(scores), len(colors))
-    # cmap = colors.LinearSegmentedColormap.from_list('incr_alpha', [(0, (*colors.to_rgb(c),0)), (1, c)])
-    rgba_colors = np.zeros((len(scores), 4))
-    rgba_colors[:, 0:3] = [mpl_colors.to_rgb(c) for c in colors]
-    rgba_colors[:, 3] = scores
-    # print(rgba_colors)
-
-    return df_ER, df_MF, df_PLM, rgba_colors
-
-
-def gen_DI_matrix(DI):
-    n_seq = max([coupling[0][0] for coupling in DI])
-    di = np.zeros((n_var, n_var))
-    for coupling in DI:
-        di[coupling[0][0], coupling[0][1]] = coupling[1]
-        di[coupling[0][1], coupling[0][0]] = coupling[1]
-    return di
-
-
-def get_PFAM_PDB_map(pdb_id, pdb_out_dir='./'):
-    # Should be downloading pdb-pfam mapping for each protein on-demand from:
-    # 'ftp://ftp.ebi.ac.uk/pub/databases/msd/sifts/xml/%s/%s.xml.gz' % (pdb_id[1:3], pdb_id)
-    # and storing it here: xml_file = '%s/%s.xml' % (pdb_out_dir, pdb_id)
-
-    # create element tree object
-    tree = et.parse(xml_file)
-
-    # get root element
-    root = tree.getroot()
-
-    # create empty list for news items
-    newsitems = []
-
-    # iterate news items
-    for item in root.findall('./channel/item'):
-
-        # empty news dictionary
-        news = {}
-
-        # iterate child elements of item
-        for child in item:
-
-            # special checking for namespace object content:media
-            if child.tag == '{http://search.yahoo.com/mrss/}content':
-                news['media'] = child.attrib['url']
-            else:
-                news[child.tag] = child.text.encode('utf8')
-
-        # append news dictionary to news items list
-        newsitems.append(news)
-
-    # return news items list
-    return newsitems
-
-    """
-    from urllib.request import urlopen
-    from xml.etree.ElementTree import parse
-    
-    var_url = urlopen('https://www.ebi.ac.uk/pdbe/api/mappings/pfam/%s' % pdb_id)
-    xmldoc = parse(var_url)
-    
-    for item in xmldoc.iterfind('channel/item'):
-        title = item.findtext('title')
-        date = item.findtext('pubDate')
-        link = item.findtext('link')
-    
-        print(title)
-        print(date)
-        print(link)
-        print()
-    """
-
-
-
-# Return the Hamming distance between string1 and string2.
-# string1 and string2 should be the same length.
-def hamming_distance(string1, string2): 
-    # Start with a distance of zero, and count up
-    distance = 0
-    # Loop over the indices of the string
-    L = len(string1)
-    for i in range(L):
-        # Add 1 to the distance if these two characters are not equal
-        if string1[i] != string2[i]:
-            distance += 1
-    # Return the final count of differences
-    return distance
-
-def window(fseq, window_size=5):
-    for i in range(len(fseq) - window_size + 1):
-        yield fseq[i:i+window_size]
-
-
-def filter_residues(residues, biomolecule='PROTEIN'):
-    """Filters the standared residues from others (e.g. hetatom residues).
-
-    Parameters
-    ----------
-        residues : list
-            A list of Biopython PDB structure residues objects.
-
-    Returns
-    -------
-        standard_residues : list
-            A lif of Biopython PDB structure standared residues (after hetro
-            atom residues are filtered).
-    """
-    biomolecule = biomolecule.strip().upper()
-    standard_residues = []
-    for res in residues:
-        if res.get_resname().strip() in STANDARD_RESIDUES[biomolecule]:
-            if not res.id[0].strip(): standard_residues.append(res) # filter out hetro residues
-    return standard_residues
-
-def pdb2msa(pdb_file):
-    pdb_id = os.path.basename(pdb_file)[3:7]
-    print(pdb_id)
-    for record in SeqIO.parse(pdb_file, "pdb-seqres"):
-        print("Record id %s, chain %s" % (record.id, record.annotations["chain"]))
-        print(record.dbxrefs)
-    
-    pdb_model = pdb_parser.get_structure(str(pdb_id), pdb_file)[0]
-    for chain in pdb_model.get_chains():
-        ppb = PPBuilder().build_peptides(chain)
-        for i, pp in enumerate(ppb):
-            poly_seq = list()
-            for char in str(pp.get_sequence()):
-                poly_seq.append(char)
-            print('Chain %s polypeptide %d: ' % (chain.get_id(), i),''.join(poly_seq))
-   
-    # Use prody to find Pfam associated with PDB polypeptide sequence 
-    prody_search = searchPfam(''.join(poly_seq))
-
-    if 1:
-        # load the Pfam MSA from biowulf database
-        pass
-    else:
-        # Download the Pfam MSA with prody
-        for pfam_id in prody_search.keys():
-            msa_file = fetchPfamMSA(prody_search[pfam_id]['accession'])
-            print(msa_file)
-
-
-      
-
-def contact_map_new(pdb_id, pdb_range, removed_cols, queried_seq, mismatches, pdb_out_dir='./', printing=True):
     if printing:
         print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
 
@@ -880,8 +681,8 @@ def contact_map_pdb2msa(pdb_df, pdb_file, removed_cols, pdb_out_dir='./', printi
     pdb_id = pdb_df['PDB ID']
     # pdb_file = pdb_list.retrieve_pdb_file(pdb_id)
 
-    pdb_start = pdb_df['ali_start'] - 1
-    pdb_end = pdb_df['ali_end'] 
+    pdb_start = pdb_df['start'] - 1
+    pdb_end = pdb_df['end'] 
     pdb_chain = pdb_df['Chain']
     pdb_pp_index = pdb_df['Polypeptide Index']
 
@@ -914,21 +715,92 @@ def contact_map_pdb2msa(pdb_df, pdb_file, removed_cols, pdb_out_dir='./', printi
         print('\nChain ', chain, ':\n', ''.join(poly_seq))
         poly_seq_range = poly_seq[pdb_start:pdb_end]
         print( '\n',''.join(poly_seq_range), '\n')
+        print('poly_seq_range (%d)' % len(poly_seq_range))
+        print('pp seq coordinates (%d)' % len(pp_ca_coords_full))
 
     n_amino_full = len(pp_ca_coords_full)
 
     # Extract coordinates and sequence char in PDB-range\
     pp_ca_coords_full_range = pp_ca_coords_full[pdb_start:pdb_end]
+    print('pp seq coordinates in range (%d)' % len(pp_ca_coords_full_range))
 
     ct_full = distance_matrix(pp_ca_coords_full, pp_ca_coords_full)
-
-
-
-    poly_seq_curated = np.delete(poly_seq_range, removed_cols)
-    pp_ca_coords_curated = np.delete(pp_ca_coords_full_range, removed_cols, axis=0)
+    removed_cols_range = np.array([col-pdb_start for col in removed_cols if col<=pdb_end and col>=pdb_start])
+    print('curating removed columns in range..(%d -> %d)\n'% (len(removed_cols), len(removed_cols_range)))
+    print('poly_seq_range: ', len(poly_seq_range))
+    poly_seq_curated = np.delete(poly_seq_range, removed_cols_range)
+    pp_ca_coords_curated = np.delete(pp_ca_coords_full_range, removed_cols_range, axis=0)
     ct = distance_matrix(pp_ca_coords_curated, pp_ca_coords_curated)
 
-    return ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range, poly_seq, pp_ca_coords_curated, pp_ca_coords_full_range
+    return ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range, poly_seq, pp_ca_coords_curated, pp_ca_coords_full_range, removed_cols_range
+
+
+def contact_map_pdb2msa_new(pdb_df, pdb_file, removed_cols, pdb_s_index, pdb_out_dir='./', printing=True):
+    if printing:
+        print('\n\n#-----------------------#\nGenerating Contact Map\n#----------------------------#\n')
+
+    pdb_id = pdb_df['PDB ID']
+    # pdb_file = pdb_list.retrieve_pdb_file(pdb_id)
+
+    pdb_start = pdb_df['ali_start'] - 1
+    pdb_end = pdb_df['ali_end'] 
+    print(pdb_start, pdb_end)
+    shifted_pdb_s_index = [col+ pdb_start for col in pdb_s_index]
+    print('PDB sequence columns in di: ', shifted_pdb_s_index)
+    pdb_chain = pdb_df['Chain']
+    pdb_pp_index = pdb_df['Polypeptide Index']
+
+    pdb_model = pdb_parser.get_structure(str(pdb_id), pdb_file)[0]
+    found_pp_match = False
+    for chain in pdb_model.get_chains():
+        if chain.get_id() == pdb_chain:
+            pass
+        else:
+            continue
+        ppb = PPBuilder().build_peptides(chain)
+
+        # # PYDCA method for getting polypeptide sequence...
+        poly_seq_new = [res.get_resname().strip() for res in filter_residues(pdb_model[chain.get_id()].get_list())]
+        print('new poly seq list: ', ''.join(poly_seq_new))
+
+        # Get full list of CA coords from poly_seq
+        poly_seq = list()
+        pp_ca_coords_full = list()
+        for i, pp in enumerate(ppb):
+            if i == pdb_pp_index:
+                pass
+            else:
+                continue
+            for char in str(pp.get_sequence()):
+                poly_seq.append(char)
+            poly_seq_ca_atoms = pp.get_ca_list()
+            pp_ca_coords_full.extend([a.get_coord() for a in poly_seq_ca_atoms])
+
+        print('\nChain ', chain, ':\n', ''.join(poly_seq))
+        poly_seq_range = poly_seq[pdb_start:pdb_end]
+        print( '\n',''.join(poly_seq_range), '\n')
+        print('poly_seq_range (%d)' % len(poly_seq_range))
+        print('pp seq coordinates (%d)' % len(pp_ca_coords_full))
+
+        # NEW getting aligned poly seq and coords
+        aligned_poly_seq  = poly_seq[pdb_start:pdb_end]
+        aligned_poly_seq = [aligned_poly_seq[i] for i in pdb_s_index]
+        print('Aligned poly_seq: (len %d)' % len(aligned_poly_seq), aligned_poly_seq)
+        aligned_ca_coords = pp_ca_coords_full[pdb_start:pdb_end]
+        aligned_ca_coords = [aligned_ca_coords[i] for i in pdb_s_index]
+        print('Aligned pp ca coords len %d' % len(aligned_ca_coords))
+
+        
+    n_amino_full = len(pp_ca_coords_full)
+
+    # Extract coordinates and sequence char in PDB-range\
+
+    ct_full = distance_matrix(pp_ca_coords_full, pp_ca_coords_full)
+    
+    # NEW create ct using Aligned coordinates
+    ct = distance_matrix(aligned_ca_coords, aligned_ca_coords)
+
+    return ct, ct_full
 
 
 

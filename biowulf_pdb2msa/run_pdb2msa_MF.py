@@ -39,7 +39,7 @@ from prody import *
 
 
 
-create_new = False
+create_new = True
 printing = True
 removing_cols = True
 

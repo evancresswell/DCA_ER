@@ -37,6 +37,8 @@ pdb_parser = Bio.PDB.PDBParser()
 
 from prody import *
 
+print('Done with initial import')
+
 
 create_new = False
 printing = True
@@ -85,11 +87,11 @@ print('Unzipping %s to %s' % (pdb_path, pdb_out_path))
 
 gunzip(pdb_path, pdb_out_path)
 
+print('Done unzipping pdb file')
 
 print(pdb_out_path)
 print(pdb_dir)
 pdb2msa_results = pdb2msa(pdb_out_path, pdb_dir, create_new=True)
-print(pdb2msa_results)
 
 if len(pdb2msa_results) > 1:
     fasta_file = pdb2msa_results[0]
@@ -103,43 +105,60 @@ print('\nPDB DF with associated Protein Families\n', prody_df.loc[:,  [column fo
 
 
 for ir, pdb2msa_row in enumerate(prody_df.iterrows()):
-    print('\n\nGetting msa with following pdb2msa entry:\n', pdb2msa_row)
+    print('\n\nGetting msa with following pdb2msa entry:\n', pdb2msa_row[1])
     try:
         dp_result =  data_processing_pdb2msa(data_path, prody_df.iloc[pdb2msa_row[0]], gap_seqs=0.2, gap_cols=0.2, prob_low=0.004,
-                               conserved_cols=0.8, printing=True, out_dir=processed_data_dir, pdb_dir=pdb_dir, letter_format=False,
-                               remove_cols=True, create_new=True, n_cpu=min(2, n_cpus))
+                           conserved_cols=0.8, printing=True, out_dir=processed_data_dir, pdb_dir=pdb_dir, letter_format=False,
+                           remove_cols=True, create_new=True, n_cpu=min(2, n_cpus))
         if dp_result is not None:
-            [s0, removed_cols, s_index, tpdb] = dp_result
+            [s0, removed_cols, s_index, tpdb, pdb_s_index] = dp_result
             break
         else:
             continue
     except Exception as e:
         print('row %d got exception: ' % ir , e)
         print('moving on.. ')
-        pass
+        continue
 pfam_id = pdb2msa_row[1]['Pfam']
 pdb_id = pdb2msa_row[1]['PDB ID']
+
+if removing_cols:
+    s0 = np.load("%s/%s_%s_preproc_msa.npy" % (processed_data_dir, pfam_id, pdb_id))
+    s_index = np.load("%s/%s_%s_preproc_sindex.npy" % (processed_data_dir, pfam_id, pdb_id))
+    pdb_s_index = np.load("%s/%s_%s_preproc_pdb_sindex.npy" % (processed_data_dir, pfam_id, pdb_id))
+    removed_cols = np.load("%s/%s_%s_removed_cols.npy" % (processed_data_dir, pfam_id, pdb_id))
+    ref_seq = np.load("%s/%s_%s_preproc_refseq.npy" % (processed_data_dir, pfam_id, pdb_id))
+else: 
+    s0 = np.load("%s/%s_%s_allCols_msa.npy" % (processed_data_dir, pfam_id, pdb_id))
+    s_index = np.load("%s/%s_%s_allCols_sindex.npy" % (processed_data_dir, pfam_id, pdb_id)) 
+    pdb_s_index = np.load("%s/%s_%s_allCols_pdb_sindex.npy" % (processed_data_dir, pfam_id, pdb_id)) 
+    removed_cols = np.load("%s/%s_%s_removed_cols.npy" % (processed_data_dir, pfam_id, pdb_id))
+    ref_seq = np.load("%s/%s_%s_allCols_refseq.npy" % (processed_data_dir, pfam_id, pdb_id))
+
+
 
 print('Done found correct prody_df row for contact predictions ... NOTE\n this step should be saved during data_processing!!!...')
 # ---------------------------------------------------------------------------- #
 
+print('\n\n...Done data_processing\n\n')
 
 
 
 di = np.load("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id))
 
-ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range, poly_seq, pp_ca_coords_curated, pp_ca_coords_full_range =  \
-tools.contact_map_pdb2msa(pdb2msa_row[1], pdb_out_path, removed_cols, pdb_out_dir=pdb_dir, printing=True)
+ct, ct_full = tools.contact_map_pdb2msa_new(pdb2msa_row[1], pdb_out_path, removed_cols, pdb_s_index, pdb_out_dir=pdb_dir, printing=True)
 
 #print("Direct Information from Expectation reflection:\n",di)
-print('ER DI shape: ' , di.shape)
-print(removed_cols)
-if not removing_cols:
-    er_di = np.delete(di, removed_cols,0)
-    er_di = np.delete(er_di, removed_cols,1)
-else:
-    er_di = di
+print('s_index (%d): ' %len(s_index), s_index)
+print('ER DI shape (before removing cols): ' , di.shape)
+er_di = di
+#if not removing_cols:
+#    er_di = np.delete(di, removed_cols_range,0)
+#    er_di = np.delete(er_di, removed_cols_range,1)
+#else:
+#    er_di = di
 
+print('contact dimentions: ', ct.shape)
 print('Final ER DI shape (cols removed): ', er_di.shape)
 if remove_diagonals: 
     ER_di = no_diag(er_di, 4, s_index)
@@ -148,8 +167,8 @@ else:
 
 from ecc_tools import scores_matrix2dict
 print(s_index)
-ER_di_dict = scores_matrix2dict(ER_di, s_index, removed_cols, removing_cols=removing_cols)
-print(ER_di_dict[:20])
+#ER_di_dict = scores_matrix2dict(ER_di, s_index, removed_cols_range, removing_cols=removing_cols)
+#print(ER_di_dict[:20])
 
 
 from ecc_tools import roc_curve, roc_curve_new, precision_curve
