@@ -97,19 +97,19 @@ print('\nPDB DF with associated Protein Families\n', prody_df.loc[:,  [column fo
 
 for ir, pdb2msa_row in enumerate(prody_df.iterrows()):
     print('\n\nGetting msa with following pdb2msa entry:\n', pdb2msa_row)
-    try:
-        dp_result =  data_processing_pdb2msa(data_path, prody_df.iloc[pdb2msa_row[0]], gap_seqs=0.2, gap_cols=0.2, prob_low=0.004,
+    #try:
+    dp_result =  data_processing_pdb2msa(data_path, prody_df.iloc[pdb2msa_row[0]], gap_seqs=0.2, gap_cols=0.2, prob_low=0.004,
                                conserved_cols=0.8, printing=True, out_dir=processed_data_dir, pdb_dir=pdb_dir, letter_format=False,
                                remove_cols=True, create_new=True, n_cpu=min(2, n_cpus))
-        if dp_result is not None:
-            [s0, removed_cols, s_index, tpdb, pdb_s_index] = dp_result
-            break
-        else: 
-            continue
-    except Exception as e:
-        print('row %d got exception: ' % ir , e)
-        print('moving on.. ')
-        pass
+    if dp_result is not None:
+        [s0, removed_cols, s_index, tpdb, pdb_s_index] = dp_result
+        break
+    else: 
+        continue
+    #except Exception as e:
+    #    print('row %d got exception: ' % ir , e)
+    #    print('moving on.. ')
+    #    pass
 
 if dp_result is None:
     print('None of the available prody pdb search found matching alignments... Exiting..')

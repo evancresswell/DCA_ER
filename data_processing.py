@@ -17,12 +17,14 @@ from scipy.spatial import distance_matrix
 from Bio import BiopythonWarning
 from Bio import pairwise2
 from Bio.pairwise2 import format_alignment
-from Bio.SubsMat.MatrixInfo import blosum62
+#from Bio.SubsMat.MatrixInfo import blosum62
 pdb_parser = Bio.PDB.PDBParser()
 
 from scipy.spatial import distance_matrix
 from urllib.error import HTTPError
-from prody import *
+#from prody import *
+#from ProDy import *
+from ProDy.prody import searchPfam, fetchPfamMSA
 
 
 #"""
@@ -95,12 +97,12 @@ def pdb2msa(pdb_file, pdb_dir, create_new=True):
                 poly_seq.append(char)
             print('\nChain %s polypeptide %d (length %d): ' % (chain.get_id(), i, len(''.join(poly_seq))),''.join(poly_seq))
 
-            try:
-                prody_search = searchPfam(''.join(poly_seq), timeout=300)
-                print(prody_search)
-            except Exception as e:
-                print('Error with prody.searchPfam: ', e, '\n')
-                continue
+            #try:
+            prody_search = searchPfam(''.join(poly_seq), timeout=300)
+            print(prody_search)
+            #except Exception as e:
+            #    print('Error with prody.searchPfam: ', e, '\n')
+            #    continue
 
              
             for pfam_key in prody_search.keys():
@@ -165,6 +167,7 @@ def get_tpdb_new(s, ali_start_indx, ali_end_indx, pfam_start_indx, pfam_end_indx
     min_ham = alignment_len
     max_pair_score = 0
     min_indx = -1
+
     for i, seq in enumerate(s):
         gap_seq = seq == '-'  # returns True/False for gaps/no gaps
         subject = seq[~gap_seq]
