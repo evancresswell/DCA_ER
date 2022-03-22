@@ -22,9 +22,10 @@ pdb_parser = Bio.PDB.PDBParser()
 
 from scipy.spatial import distance_matrix
 from urllib.error import HTTPError
-#from prody import *
+from prody import *
+from prody import searchPfam, fetchPfamMSA
 #from ProDy import *
-from ProDy.prody import searchPfam, fetchPfamMSA
+#from ProDy.prody import searchPfam, fetchPfamMSA
 
 
 #"""
@@ -58,20 +59,19 @@ def pdb2msa(pdb_file, pdb_dir, create_new=True):
     # if you just want to load it
     if os.path.exists('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id)) and not create_new:
         prody_df = pd.read_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
-        try:
-            pfam_accession = prody_df.iloc[0]['accession']
+        #try:
+        if 0:
+            pfam_accession = prody_df.iloc[0]['accession'][:7]
             print('fetch %s MSA' % pfam_accession)
     
             # Download the Pfam MSA with prody
-            fasta_file = fetchPfamMSA(pfam_accession, format='fasta', timeout=10000)
+            #fasta_file = fetchPfamMSA(pfam_accession, format='fasta')
             print(fasta_file)
             return [fasta_file, prody_df]
-        except Exception as e:
-            print('Error during fetPfamMSA: ',e)
+        #except Exception as e:
+        else:
+            #print('Error during fetchPfamMSA: ',e)
             return [prody_df]
-        return [fasta_file, prody_df] 
-
-
 
     print(pdb_id)
     chain_matches = {}
@@ -141,16 +141,18 @@ def pdb2msa(pdb_file, pdb_dir, create_new=True):
 
     prody_df.to_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
 
-    try:
+    #try:
+    if 0:
         pfam_accession = prody_df.iloc[0]['accession']
         print('fetch %s MSA' % pfam_accession)
 
         # Download the Pfam MSA with prody
-        fasta_file = fetchPfamMSA(pfam_accession, format='fasta', timeout=10000)
+        #fasta_file = fetchPfamMSA(pfam_accession, format='fasta', timeout=10000)
         print(fasta_file)
         return [fasta_file, prody_df]
-    except Exception as e:
-        print('Error during fetPfamMSA: ',e)
+    #except Exception as e:
+    else:
+        #print('Error during fetchPfamMSA: ',e)
         return [prody_df]
 
 
@@ -167,42 +169,52 @@ def get_tpdb_new(s, ali_start_indx, ali_end_indx, pfam_start_indx, pfam_end_indx
     min_ham = alignment_len
     max_pair_score = 0
     min_indx = -1
-
+    best_alignment = None
     for i, seq in enumerate(s):
         gap_seq = seq == '-'  # returns True/False for gaps/no gaps
         subject = seq[~gap_seq]
         seq_str = ''.join(subject).upper()
         aligned_seq_str = seq_str[pfam_start_indx : pfam_end_indx+1]
-        if len(aligned_seq_str) != alignment_len:
-           continue
-        ham_dist = hamming_distance(aligned_pdb_str, aligned_seq_str)
+        #if len(aligned_seq_str) != alignment_len:
+        #   print('length mismatch %d, %d' % (len(aligned_seq_str), alignment_len))
+        #   continue
+        #ham_dist = hamming_distance(aligned_pdb_str, aligned_seq_str)
         alignments = pairwise2.align.globalxx(aligned_pdb_str, aligned_seq_str)
         
         if len(alignments) == 0:
             continue
-        pair_score = alignments[0].score
+        try:
+            pair_score = alignments[0].score
+        except(AttributeError):
+            pair_score = alignments[0][2]
+
 #         if ham_dist < min_ham:
         if pair_score > max_pair_score:
-            min_ham = ham_dist
+            #min_ham = ham_dist
             max_pair_score = pair_score
             min_indx = i
             print(format_alignment(*alignments[0]))
             best_alignment = alignments[0]
             print('match upgrade at' , i)
-            print('%d: hamm dist=%d, pairwise score=%f\n' % (i, ham_dist, pair_score))
+            #print('%d: hamm dist=%d, pairwise score=%f\n' % (i, ham_dist, pair_score))
+            print('%d: pairwise score=%f\n' % (i, pair_score))
             print('lengths: ', len(aligned_pdb_str), len(aligned_seq_str))
             print(best_alignment)
-
-
-            pair_score = alignments[0].score
 
     gap_seq = s[min_indx] == '-'
     print('best match is sequence %d with hamming distance of %d (length %d)' % (min_indx, min_ham, len(s[min_indx][~gap_seq])))
     
-    
+    if best_alignment is None:
+        print('ERROR could not find alignment with score better than 0..') 
+        
     # get matching seq for both sequences (no gaps in either)
-    aligned_pdb_char_array = np.array([char for char in best_alignment.seqA])
-    aligned_ref_char_array = np.array([char for char in best_alignment.seqB])
+    try:
+        aligned_pdb_char_array = np.array([char for char in best_alignment.seqA])
+        aligned_ref_char_array = np.array([char for char in best_alignment.seqB])
+    except(AttributeError):
+        aligned_pdb_char_array = np.array([char for char in best_alignment[0]])
+        aligned_ref_char_array = np.array([char for char in best_alignment[1]])
+       
     
     # get array of gaps for both sequences
     seqA_gaps = aligned_pdb_char_array == '-'
@@ -222,7 +234,6 @@ def get_tpdb_new(s, ali_start_indx, ali_end_indx, pfam_start_indx, pfam_end_indx
         if aligned_pdb_char_array[i] !='-':
             gap_pdb_index[i] = int(pdb_count)
             pdb_count += 1            
-#     print(gap_ref_index)    
     
     
     # get columns to remove (gap in PDB) in MSA
@@ -231,7 +242,7 @@ def get_tpdb_new(s, ali_start_indx, ali_end_indx, pfam_start_indx, pfam_end_indx
 
     # get s_index for mapping msa to pdb sequence.
     pdb_s_index = gap_pdb_index[~aligned_gaps]
-    print(len(pdb_s_index), pdb_s_index)
+    print('PDB index map: ', len(pdb_s_index), pdb_s_index)
     
     # Extract further infor for aligned seqs.
     aligned_pdb_nogap = aligned_pdb_char_array[~aligned_gaps]
@@ -242,12 +253,14 @@ def get_tpdb_new(s, ali_start_indx, ali_end_indx, pfam_start_indx, pfam_end_indx
     
     # Trim By gaps in Ref seq (tbr). Then Trim By gaps in Pdb seq (tpb)
     s_tbr = s[:, ~gap_seq]
+    s_tbr = s_tbr[:,pfam_start_indx : pfam_end_indx+1]
+    print('s_tbr[tpdb] = ', s_tbr[min_indx])
     print(s_tbr.shape)
     s_tbr_tbp = np.delete(s_tbr, pdb_gap_cols_in_ref, axis=1)
     print(s_tbr_tbp.shape)
 
     # printed ref seq should be the same as the fully alinged, gapless pdb and ref seqs above.
-    print(len(s_tbr_tbp[min_indx]), s_tbr_tbp[min_indx])
+    print('MSA trimmed by reference and pdb_sequence: ', len(s_tbr_tbp[min_indx]), s_tbr_tbp[min_indx])
     
 
 
@@ -1015,7 +1028,7 @@ def data_processing_pdb2msa(data_path, pdb_df,gap_seqs=0.2, gap_cols=0.2, prob_l
     if remove_cols:
         np.save("%s/%s_%s_preproc_msa.npy" % (out_dir, pfam_id, pdb_id), s)
         np.save("%s/%s_%s_preproc_sindex.npy" % (out_dir, pfam_id, pdb_id), s_index)
-        np.save("%s/%s_%s_preproc_pdb_sindex.npy" % (out_dir, pfam_id, pdb_id), s_index)
+        np.save("%s/%s_%s_preproc_pdb_sindex.npy" % (out_dir, pfam_id, pdb_id), pdb_s_index)
         np.save("%s/%s_%s_preproc_refseq.npy" % (out_dir, pfam_id, pdb_id), s[tpdb])
     else:
         np.save("%s/%s_%s_allCols_msa.npy" % (out_dir, pfam_id, pdb_id), s)

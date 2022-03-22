@@ -14,7 +14,7 @@ from matplotlib import colors as mpl_colors
 import random
 import xml.etree.ElementTree as et
 from pathlib import Path
-from data_processing import data_processing, find_and_replace, data_processing_msa2pdb, load_msa
+from data_processing import data_processing, find_and_replace, data_processing_msa2pdb, load_msa, data_processing_pdb2msa
 from sklearn.metrics import roc_curve as roc_scikit
 from sklearn.metrics import auc, precision_recall_curve
 
@@ -496,6 +496,73 @@ def npy2fa_new(data_path, pfam_id, pdb_data_dir, index_pdb=0, n_cpu=4, create_ne
 
     return msa_outfile, ref_outfile, s, pdb_select, pdb_chain, tpdb
 
+def npy2fa_pdb2msa(data_path, pdb2msa_row, pdb_data_dir, index_pdb=0, n_cpu=4, create_new=True, processed_data_dir='./'): # letter_format is True
+    # creates output for pydca to use
+
+    print('\n\nnpy2fa_pdb2msa pdb2msa_row: ', pdb2msa_row)
+    print('\n\n')
+    dp_result =  data_processing_pdb2msa(data_path, pdb2msa_row,\
+                                         gap_seqs=0.2, gap_cols=0.2, prob_low=0.004,
+                                         conserved_cols=0.8, printing=True, \
+                                         out_dir=processed_data_dir, pdb_dir=pdb_data_dir,\
+                                         letter_format=True, remove_cols=False, create_new=True,\
+                                         n_cpu=min(2, n_cpu))   
+
+
+    [s0, removed_cols, s_index, tpdb, pdb_s_index] = dp_result
+    # # -------------------------------- # #
+
+    # we still want to remove bad sequences
+    # - Removing bad sequences (>gap_seqs gaps) -------------------- #
+    from data_processing import remove_bad_seqs
+    # removes all sequences (rows) with >gap_seqs gap %
+    s, tpdb = remove_bad_seqs(s0, tpdb, .2, trimmed_by_refseq=False)
+    # -------------------------------------------------------------- #
+
+    # # ------- Write to FASTA --------- # #
+    # Next save MSA to FASTA file
+    pfam_id = pdb2msa_row['Pfam']
+    print(processed_data_dir)
+    msa_outfile = Path(processed_data_dir, '%s_msa_raw.fa' % pfam_id)
+
+    with open(str(msa_outfile), 'w') as fh:
+        for seq_num, seq in enumerate(s):
+            msa_list = seq.tolist()
+            msa_str = ''
+            msa_str = msa_str.join(msa_list)
+            if seq_num == tpdb:
+                fasta_header = pfam_id + ' | REFERENCE'
+            else:
+                fasta_header = pfam_id + 'seq %d' % seq_num
+            fh.write('>{}\n{}\n'.format(fasta_header, msa_str))
+            
+            
+    # # ---- Get Reference Seq --------- # #                                                                                            
+    
+    print('Reference sequence (tpdb, s_ipdb) is sequence # %d' % tpdb)                                                                  
+    gap_pdb = s[tpdb] == '-'  # returns True/False for gaps/no gaps in reference sequence                                           
+    s_gap = s[:, ~gap_pdb]  # removes gaps in reference sequence
+    ref_s = s_gap[tpdb]
+    print("shape of s: ", s.shape)                                                                        
+    print("shape of ref_s: ", ref_s.shape)
+    # print(ref_s)
+
+    # # -------------------------------- # #                                                                                            
+    ref_outfile = Path(processed_data_dir, '%s_ref.fa' % pfam_id)
+    with open(str(ref_outfile), 'w') as fh:
+        ref_str = ''
+#         ref_list = ref_s.tolist()
+        ref_list = [char for char in ref_s]
+        ref_str = ref_str.join(ref_list)
+        fh.write('>{}\n{}\n'.format(pfam_id + ' | REFERENCE', ref_str))
+    print(len(ref_str))
+        # Reference string now gotten from geting PDB match in ecc_tools.find_best_pdb()
+#         fh.write('>{}\n{}\n'.format(pfam_id + ' | REFERENCE', ref_seq))
+    # # -------------------------------- # #
+
+
+    return msa_outfile, ref_outfile, s, tpdb, removed_cols, s_index, pdb_s_index
+
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # read fasta file of msa and ref (if given) where ref is inserted in correcto row (according to pdb) 
@@ -745,8 +812,8 @@ def contact_map_pdb2msa_new(pdb_df, pdb_file, removed_cols, pdb_s_index, pdb_out
     pdb_start = pdb_df['ali_start'] - 1
     pdb_end = pdb_df['ali_end'] 
     print(pdb_start, pdb_end)
-    shifted_pdb_s_index = [col+ pdb_start for col in pdb_s_index]
-    print('PDB sequence columns in di: ', shifted_pdb_s_index)
+    #shifted_pdb_s_index = [col+ pdb_start for col in pdb_s_index]
+    #print('PDB sequence columns in di: ', shifted_pdb_s_index)
     pdb_chain = pdb_df['Chain']
     pdb_pp_index = pdb_df['Polypeptide Index']
 
