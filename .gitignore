@@ -7,6 +7,10 @@ Pfam-A.full/
 *.o
 *.e
 *.ent
+*.swarm
+*.out
+protein_data/
+ProDy/
 
 
 # C extensions

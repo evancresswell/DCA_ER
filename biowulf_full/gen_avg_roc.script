@@ -1,0 +1,8 @@
+#!/bin/bash
+
+#sbatch --mem=100g --cpus-per-task=40 gen_avg_roc.script
+#source /data/cresswellclayec/conda/etc/profile.d/conda.sh; conda activate plotting; python generate_average_roc.py $SLURM_CPUS_PER_TASK ER
+#source /data/cresswellclayec/conda/etc/profile.d/conda.sh; conda activate plotting; python generate_average_roc.py $SLURM_CPUS_PER_TASK PMF
+source /data/cresswellclayec/conda/etc/profile.d/conda.sh; conda activate plotting; python generate_average_roc.py $SLURM_CPUS_PER_TASK PLM
+
+

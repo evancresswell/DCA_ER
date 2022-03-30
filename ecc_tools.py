@@ -971,31 +971,93 @@ def contact_map(pdb, ipdb, pp_range, cols_removed, s_index, ref_seq=None, printi
     return ct, ct_full, n_amino_full, poly_seq_curated, poly_seq_range
 
 
-def roc_curve_new(ct, di, ct_thres):
+def roc_curve_new(ct, di, ct_thres, s_index, ld_thresh=5, get_uniform=False):
     """
     ct: n x n matrix of True/False for contact
 
     di: n x n matrix of coupling info where n is number of positions with contact predictions
 
     ct_trhes:  distance for contact threshold
+ 
+    get_uniform: (boolean) Do you want uniform length fpr,tpr curves (for Pfam-Pfram prediction comparison)
+
+    s_index:  n x 1 array of true-index positions of aas. if not None then |i-j| > 4 linear distance is enforced.
     """
+
     ct1 = ct.copy()
 
     ct_pos = ct1 < ct_thres
     ct1[ct_pos] = 1
     ct1[~ct_pos] = 0
-
+   
     mask = np.triu(np.ones(di.shape[0], dtype=bool), k=1)
     # argsort sorts from low to high. [::-1] reverses 
     order = di[mask].argsort()[::-1]
     ct_flat = ct1[mask][order]
+    
+
+    #print('di shape: ', di.shape)
+    #print('Using s_index (len %d) to constrain di predictions by linear aa distance of 4' % len(s_index))
+    # get matrix of linear distance between positions
+    linear_distance = np.zeros((len(s_index),len(s_index)))
+    for i, ii in enumerate(s_index):
+        for j, jj in enumerate(s_index):
+            linear_distance[i,j] = abs(ii - jj)
+    ld = linear_distance >= ld_thresh
+    ld_flat = ld[mask][order]
+    #print(ld_flat)
+    old_len = len(ct_flat)
+    ct_flat = ct_flat[ld_flat]
+    ct_pos_flat = ct[mask][order][ld_flat]
+    #print(ct_flat[:10])
+    #print(ld_flat[:10])
+    #print(ct_flat_ld[:10])
+    #print('length of predictions before: %d and after: %d linear distance constraint' % (old_len, len(ct_flat)))
+
+
+    if get_uniform: # get uniform length curves
+        tp = np.cumsum(ct_flat, dtype=float)
+        fp = np.cumsum(~ct_flat.astype(int), dtype=float)
+        print('tp: ', tp)
+        print('fp: ', fp)
+        print(len(tp), len(fp))
+        if tp[-1] !=0:
+            tp /= tp[-1]
+            fp /= fp[-1]
+        # bining (to reduce the size of tp,fp and make fp having the same values for every pfam)
+        nbin = 101
+        pbin = np.linspace(0,1,nbin, endpoint=True)
+        #print(pbin)
+        fp_size = fp.shape[0]
+        fpbin = np.ones(nbin)
+        tpbin = np.ones(nbin)
+        for ibin in range(nbin-1):
+            # find value in a range
+            t1 = [(fp[t] > pbin[ibin] and fp[t] <= pbin[ibin+1]) for t in range(fp_size)]
+    
+            if len(t1)>0 :
+                fpbin[ibin] = fp[t1].mean()
+                tpbin[ibin] = tp[t1].mean()
+            else:
+                #print(i)
+                tpbin[ibin] = tpbin[ibin-1]
+        tpr_uni = tpbin
+        fpr_uni = fpbin
+        uni_bin = pbin
+        auc_uni= auc(fpr_uni, tpr_uni)
+    
     # print("ct_flat dimensions: ", np.shape(ct_flat))
     # print(di[mask][order][:50])
     # print(ct_flat[:50])
-    fpr, tpr, thresholds = roc_scikit(ct_flat, di[mask][order])
+    print(ct_flat)
+    fpr, tpr, thresholds = roc_scikit(ct_flat, di[mask][order][ld_flat])
     roc_auc= auc(fpr, tpr)
     print('ct thresh %f gives auc = %f' % (ct_thres, roc_auc))
-    return fpr, tpr, thresholds, roc_auc
+    if get_uniform:
+        return fpr, tpr, thresholds, roc_auc, tpr_uni, fpr_uni, auc_uni, uni_bin, ct_pos_flat
+    else:
+        return fpr, tpr, thresholds, roc_auc, ct_pos_flat
+
 
 def precision_curve(ct, di, ct_thres):
     """
