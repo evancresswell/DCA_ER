@@ -7,8 +7,9 @@
 #swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
 
 ## generate tp and fp curves 
-swarm -f comparison_pdb.swarm -g 100 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
+#swarm -f comparison_pdb.swarm -g 100 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
 
 ## bootstrap auc values for ER 
 #swarm -f bootstrap_ER.swarm -g 150 -t 42 --time=1:00:00 --partition norm --logdir swarm_output -b 5 # -b 100 #  quick # norm
 
+swarm -f ks.swarm -g 10 --time=10:00 --partition norm --logdir swarm_output -b 100 # -b 100 #  quick # norm
