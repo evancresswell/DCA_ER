@@ -568,12 +568,25 @@ def npy2fa_pdb2msa(data_path, pdb2msa_row, pdb_data_dir, index_pdb=0, n_cpu=4, c
 # read fasta file of msa and ref (if given) where ref is inserted in correcto row (according to pdb) 
 def read_FASTA(msa_file, ref_index=None):
     print('\nLoading Fasta File\n%s\n' % msa_file)
+    fasta_sequences = SeqIO.parse(open(msa_file),'fasta')
     for i, seq_record in enumerate(SeqIO.parse(msa_file, "fasta")):
         if ref_index is not None and i==ref_index:
             print('Reference Sequence (index %d) : ' % ref_index, seq_record.id)
             print(np.array(seq_record.seq), '\n\n')
             # print(repr(seq_record.seq))
             # print(len(seq_record))
+
+    msa_list = []
+    for fasta in fasta_sequences:
+        msa_list.append(np.array([char for char in str(fasta.seq)]))
+    msa_array = np.chararray((len(msa_list), len(msa_list[0])))
+    for i, seq in enumerate(msa_list):
+        for j, char in enumerate(seq):
+            if char == '.':
+                msa_array[i,j] = '-'
+            else:
+                msa_array[i,j] = char.upper()
+    return fasta_sequences, msa_array
             
 
 # -------------------------------------------------------------------------------------------------------------------- #
