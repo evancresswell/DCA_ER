@@ -20,6 +20,7 @@ def get_tp_val(fp_val, fpr, tpr):
             return tpr[i]
         elif tpr[i] == tpr[i-1]:
             return tpr[i]
+        
         if i > 0:
             d = np.sqrt(abs(fp - fpr[i-1])**2 + abs(tpr[i]-tpr[i-1])**2)
             avg_p = abs(fp_val-fpr[i-1])/d
@@ -32,7 +33,7 @@ def get_tp_val(fp_val, fpr, tpr):
 
 def get_full_length_tpr(fprs, tprs, full_fpr, i):
     tpr = [get_tp_val(fp_val, fprs[i], tprs[i]) for fp_val in full_fpr]
-    print('%d tpr full: ' % i,  len(tpr))
+    # print('%d tpr full: ' % i,  len(tpr))
     return tpr
     
 def get_average_roc(tprs, fprs, n_cpus):
