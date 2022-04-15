@@ -7,7 +7,19 @@
 #swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
 
 # second batch: ER: 4/11/22
-swarm -f pdb2msa_ER_1.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
+#swarm -f pdb2msa_ER_1.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
+#swarm -f pdb2msa_MF.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_PMF.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+
+# third batch: ER: 4/12/22
+#swarm -f pdb2msa_ER_2.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
+#swarm -f pdb2msa_MF.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_PMF.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+
+# fourth batch: ER: 4/13/22 -- Happy Birthday Ray-Ray
+swarm -f pdb2msa_ER_3.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
 #swarm -f pdb2msa_MF.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
 #swarm -f pdb2msa_PMF.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
 #swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm

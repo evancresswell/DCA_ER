@@ -97,12 +97,12 @@ def pdb2msa(pdb_file, pdb_dir, create_new=True):
                 poly_seq.append(char)
             print('\nChain %s polypeptide %d (length %d): ' % (chain.get_id(), i, len(''.join(poly_seq))),''.join(poly_seq))
 
-            #try:
-            prody_search = searchPfam(''.join(poly_seq), timeout=300)
-            print(prody_search)
-            #except Exception as e:
-            #    print('Error with prody.searchPfam: ', e, '\n')
-            #    continue
+            try:
+                prody_search = searchPfam(''.join(poly_seq), timeout=300)
+                print(prody_search)
+            except Exception as e:
+                print('Error with prody.searchPfam: ', e, '\n')
+                continue
 
              
             for pfam_key in prody_search.keys():
@@ -792,7 +792,6 @@ def delete_sorted_DI_duplicates(sorted_DI):
 # noinspection PyBroadException
 def load_msa(data_path, pfam_id):
     s = np.load('%s/%s/msa.npy' % (data_path, pfam_id)).T
-    # print("shape of s (import from msa.npy):\n",s.shape)
 
     # convert bytes to str
     try:
@@ -800,7 +799,16 @@ def load_msa(data_path, pfam_id):
                       for i in range(s.shape[1])]).reshape(s.shape[0], s.shape[1])
     # print("shape of s (after UTF-8 decode):\n",s.shape)
     except:
-        print("\n\nUTF not decoded, pfam_id: %s \n\n" % pfam_id, s.shape)
+        print("\n\nUTF not decoded, pfam_id: %s\n" % pfam_id, s.shape)
+        print(s[0])
+        # last ditch effort -- takes much more memory/time to decode
+        try:
+            s = np.array([str(s[t, i])[2] for t in range(s.shape[0]) \
+                      for i in range(s.shape[1])]).reshape(s.shape[0], s.shape[1])
+            return s
+        except:
+            print('trying long way after UTF exception didnt work: ', sys.exc_info()[0])
+            pass
         print("Exception: ", sys.exc_info()[0])
         # Create list file for missing pdb structures
         if not os.path.exists('missing_MSA.txt'):
@@ -853,6 +861,7 @@ def data_processing_pdb2msa(data_path, pdb_df,gap_seqs=0.2, gap_cols=0.2, prob_l
     
     # Load MSA
     s = load_msa(data_path, pfam_id)
+    print('s: ', s)
     orig_seq_len = s.shape[1]
     print('Original Sequence length: ', orig_seq_len)
 
