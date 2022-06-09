@@ -76,7 +76,12 @@ def gunzip(file_path, output_path):
 
 
 # pdb_path = "/pdb/pdb/zd/pdb1zdr.ent.gz"
-pdb_path = sys.argv[1]
+if len(sys.argv[1]) > 4:
+    pdb_path = sys.argv[1]
+else:
+    pdb_id = sys.argv[1]
+    pdb_path = "/pdb/pdb/%s/pdb%s.ent.gz" % (pdb_id[1:3], pdb_id) 
+
 n_cpus = int(sys.argv[2])
 print('\n\nUnzipping %s' % pdb_path)
 

@@ -36,26 +36,56 @@ dir_path = "/data/cresswellclayec/DCA_ER/biowulf_full/protein_data/di/"
 ks_path = "/data/cresswellclayec/DCA_ER/biowulf_full/protein_data/metrics/"
 
 # Get list of files from completed auc-bootstrap files
-boot_auc_files = list(Path(out_metric_dir).rglob("*bootstrap_aucs.npy"))
-print(len(boot_auc_files))
-boot_auc_files_str = [str(os.path.basename(path)) for path in boot_auc_files]
-pfam_ids = [tp_str[:7] for tp_str in boot_auc_files_str] 
-pdb_ids = [tp_str[8:12] for tp_str in boot_auc_files_str] 
+if 0:
+   boot_auc_files = list(Path(out_metric_dir).rglob("*bootstrap_aucs.npy"))
+   print(len(boot_auc_files))
+   boot_auc_files_str = [str(os.path.basename(path)) for path in boot_auc_files]
+   pfam_ids = [tp_str[:7] for tp_str in boot_auc_files_str] 
+   pdb_ids = [tp_str[8:12] for tp_str in boot_auc_files_str] 
 
-f = open('ks_exact.swarm','w')
-for i, pdb_id  in enumerate(pdb_ids):    
-    pfam_id = pfam_ids[i]
-    f.write('source /data/cresswellclayec/conda/etc/profile.d/conda.sh; ')
-    f.write('conda activate plotting; ')
-    f.write('python run_ks_comp_exact.py %s %s $SLURM_CPUS_PER_TASK\n'%(pdb_id, pfam_id))
-    #f.write('module load singularity; ')
-    #f.write('singularity exec -B /data/cresswellclayec/DCA_ER/biowulf/ /data/cresswellclayec/DCA_ER/dca_er.simg python 1main_ER.py %s\n'%(pdb))
-f.close()
+# get list of files with DI for all three methods
+ER_di_files = list(Path(out_dir).rglob("*ER*"))
+ER_di_files_str = [str(os.path.basename(path)) for path in ER_di_files]
+ER_pdb_ids = [di_str[:4] for di_str in ER_di_files_str] 
+ER_pfam_ids = [di_str[5:12] for di_str in ER_di_files_str] 
+PMF_di_files = list(Path(out_dir).rglob("*PMF*"))
+PMF_di_files_str = [str(os.path.basename(path)) for path in PMF_di_files]
+PMF_pdb_ids = [di_str[:4] for di_str in PMF_di_files_str] 
+PMF_pfam_ids = [di_str[5:12] for di_str in PMF_di_files_str] 
+PLM_di_files = list(Path(out_dir).rglob("*PLM*"))
+PLM_di_files_str = [str(os.path.basename(path)) for path in PLM_di_files]
+PLM_pdb_ids = [di_str[:4] for di_str in PLM_di_files_str] 
+PLM_pfam_ids = [di_str[5:12] for di_str in PLM_di_files_str] 
+
+# get intersection of sets
+comparison_pdb_str_set = set.intersection(set(ER_pdb_ids), set(PLM_pdb_ids), set(PMF_pdb_ids))
+comparison_pdb_set = [pdb for pdb in comparison_pdb_str_set]
+
+if 0:
+    # if we dont want to run comparison on methods that have already been compared
+    compared_files = list(Path(out_metric_dir).rglob("*ER*"))
+    compared_files_str = [str(os.path.basename(path)) for path in ER_di_files]
+    compared_pdb_ids = [di_str[:4] for di_str in ER_di_files_str] 
+    
+comparison_pfam_set = [ER_pfam_ids[ER_pdb_ids.index(pdb)] for pdb in comparison_pdb_set]
+
+
+# ks exact and asymptotic now done in run_method_comparison
+if 0:
+    f = open('ks_exact.swarm','w')
+    for i, pdb_id  in enumerate(comparison_pdb_set):    
+        pfam_id = comparison_pfam_set[i]
+        f.write('source /data/cresswellclayec/conda/etc/profile.d/conda.sh; ')
+        f.write('conda activate plotting; ')
+        f.write('python run_ks_comp_exact.py %s %s $SLURM_CPUS_PER_TASK\n'%(pdb_id, pfam_id))
+        #f.write('module load singularity; ')
+        #f.write('singularity exec -B /data/cresswellclayec/DCA_ER/biowulf/ /data/cresswellclayec/DCA_ER/dca_er.simg python 1main_ER.py %s\n'%(pdb))
+    f.close()
  
 
-f = open('compare_asymptotic.swarm','w')
-for i, pdb_id  in enumerate(pdb_ids):    
-    pfam_id = pfam_ids[i]
+f = open('method_comparison_ks.swarm','w')
+for i, pdb_id  in enumerate(comparison_pdb_set):    
+    pfam_id = comparison_pfam_set[i]
     f.write('source /data/cresswellclayec/conda/etc/profile.d/conda.sh; ')
     f.write('conda activate DCA_ER; ')
     f.write('python run_method_comparison.py %s %s $SLURM_CPUS_PER_TASK\n'%(pdb_id, pfam_id))

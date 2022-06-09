@@ -73,7 +73,7 @@ def pdb2msa(pdb_file, pdb_dir, create_new=True):
             #print('Error during fetchPfamMSA: ',e)
             return [prody_df]
 
-    print(pdb_id)
+    # print(pdb_id)
     chain_matches = {}
     for record in SeqIO.parse(pdb_file, "pdb-seqres"):
         print("Record id %s, chain %s" % (record.id, record.annotations["chain"]))
@@ -825,7 +825,7 @@ def load_msa(data_path, pfam_id):
 
 def data_processing_pdb2msa(data_path, pdb_df,gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
                         conserved_cols=0.8, printing=True, out_dir='./', pdb_dir='./', letter_format=False, 
-                        remove_cols=True, create_new=True, n_cpu=2):
+                        remove_cols=True, create_new=True):
     pfam_id = pdb_df['Pfam']
     pdb_seq = pdb_df['PDB Sequence']
     pdb_id = pdb_df['PDB ID']

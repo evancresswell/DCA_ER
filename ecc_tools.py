@@ -197,14 +197,14 @@ def find_matching_seqs_from_alignment(sequences, ref_sequence):
 
 
 
-def scores_matrix2dict(scores_matrix, s_index, curated_cols, removing_cols=False):
+def scores_matrix2dict(scores_matrix, s_index, curated_cols=None):
     """
     # This functions converts the matrix of ER dca scores to the pydca-format dictionary (with 2 int index tuple as keys) 
     #   incorporates the removed columns during pre-processing (cols_removed) resulting in a pydca di matrix with
     #   correct dimensions
     """
     scores = []
-    if not removing_cols:
+    if curated_cols is not None:
         s_index = np.delete(s_index, curated_cols)
     for i in range(len(s_index)):
         for j in range(i+1, len(s_index)):
@@ -505,8 +505,7 @@ def npy2fa_pdb2msa(data_path, pdb2msa_row, pdb_data_dir, index_pdb=0, n_cpu=4, c
                                          gap_seqs=0.2, gap_cols=0.2, prob_low=0.004,
                                          conserved_cols=0.8, printing=True, \
                                          out_dir=processed_data_dir, pdb_dir=pdb_data_dir,\
-                                         letter_format=True, remove_cols=False, create_new=True,\
-                                         n_cpu=min(2, n_cpu))   
+                                         letter_format=True, remove_cols=False, create_new=True)   
 
 
     [s0, removed_cols, s_index, tpdb, pdb_s_index] = dp_result

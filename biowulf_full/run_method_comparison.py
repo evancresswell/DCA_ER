@@ -30,6 +30,100 @@ print('Done with initial import')
 import pandas as pd
 import numpy as np
 import scipy.stats
+# intepreting ks statistic results: https://www.graphpad.com/guides/prism/latest/statistics/interpreting_results_kolmogorov-smirnov_test.html
+# Original ks function notes from scipy.stats:
+"""
+    Performs the two-sample Kolmogorov-Smirnov test for goodness of fit.
+    This test compares the underlying continuous distributions F(x) and G(x)
+    of two independent samples.  See Notes for a description
+    of the available null and alternative hypotheses.
+    Parameters
+    ----------
+    data1, data2 : array_like, 1-Dimensional
+        Two arrays of sample observations assumed to be drawn from a continuous
+        distribution, sample sizes can be different.
+    alternative : {'two-sided', 'less', 'greater'}, optional
+        Defines the null and alternative hypotheses. Default is 'two-sided'.
+        Please see explanations in the Notes below.
+    method : {'auto', 'exact', 'asymp'}, optional
+        Defines the method used for calculating the p-value.
+        The following options are available (default is 'auto'):
+          * 'auto' : use 'exact' for small size arrays, 'asymp' for large
+          * 'exact' : use exact distribution of test statistic
+          * 'asymp' : use asymptotic distribution of test statistic
+    Returns
+    -------
+    statistic : float
+        KS statistic.
+    pvalue : float
+        One-tailed or two-tailed p-value.
+    Notes
+    -----
+    There are three options for the null and corresponding alternative
+    hypothesis that can be selected using the `alternative` parameter.
+    - `two-sided`: The null hypothesis is that the two distributions are
+      identical, F(x)=G(x) for all x; the alternative is that they are not
+      identical.
+    - `less`: The null hypothesis is that F(x) >= G(x) for all x; the
+      alternative is that F(x) < G(x) for at least one x.
+    - `greater`: The null hypothesis is that F(x) <= G(x) for all x; the
+      alternative is that F(x) > G(x) for at least one x.
+    Note that the alternative hypotheses describe the *CDFs* of the
+    underlying distributions, not the observed values. For example,
+    suppose x1 ~ F and x2 ~ G. If F(x) > G(x) for all x, the values in
+    x1 tend to be less than those in x2.
+    If the KS statistic is small or the p-value is high, then we cannot
+    reject the null hypothesis in favor of the alternative.
+    If the method is 'auto', the computation is exact if the sample sizes are
+    less than 10000.  For larger sizes, the computation uses the
+    Kolmogorov-Smirnov distributions to compute an approximate value.
+    The 'two-sided' 'exact' computation computes the complementary probability
+    and then subtracts from 1.  As such, the minimum probability it can return
+    is about 1e-16.  While the algorithm itself is exact, numerical
+    errors may accumulate for large sample sizes.   It is most suited to
+    situations in which one of the sample sizes is only a few thousand.
+    We generally follow Hodges' treatment of Drion/Gnedenko/Korolyuk [1]_.
+    References
+    ----------
+    .. [1] Hodges, J.L. Jr.,  "The Significance Probability of the Smirnov
+           Two-Sample Test," Arkiv fiur Matematik, 3, No. 43 (1958), 469-86.
+    Examples
+    --------
+    Suppose we wish to test the null hypothesis that two samples were drawn
+    from the same distribution.
+    We choose a confidence level of 95%; that is, we will reject the null
+    hypothesis in favor of the alternative if the p-value is less than 0.05.
+    If the first sample were drawn from a uniform distribution and the second
+    were drawn from the standard normal, we would expect the null hypothesis
+    to be rejected.
+    >>> from scipy import stats
+    >>> rng = np.random.default_rng()
+    >>> sample1 = stats.uniform.rvs(size=100, random_state=rng)
+    >>> sample2 = stats.norm.rvs(size=110, random_state=rng)
+    >>> stats.ks_2samp(sample1, sample2)
+    KstestResult(statistic=0.5454545454545454, pvalue=7.37417839555191e-15)
+    Indeed, the p-value is lower than our threshold of 0.05, so we reject the
+    null hypothesis in favor of the default "two-sided" alternative: the data
+    were *not* drawn from the same distribution.
+    When both samples are drawn from the same distribution, we expect the data
+    to be consistent with the null hypothesis most of the time.
+    >>> sample1 = stats.norm.rvs(size=105, random_state=rng)
+    >>> sample2 = stats.norm.rvs(size=95, random_state=rng)
+    >>> stats.ks_2samp(sample1, sample2)
+    KstestResult(statistic=0.10927318295739348, pvalue=0.5438289009927495)
+    As expected, the p-value of 0.54 is not below our threshold of 0.05, so
+    we cannot reject the null hypothesis.
+    Suppose, however, that the first sample were drawn from
+    a normal distribution shifted toward greater values. In this case,
+    the cumulative density function (CDF) of the underlying distribution tends
+    to be *less* than the CDF underlying the second sample. Therefore, we would
+    expect the null hypothesis to be rejected with ``alternative='less'``:
+    >>> sample1 = stats.norm.rvs(size=105, loc=0.5, random_state=rng)
+    >>> stats.ks_2samp(sample1, sample2, alternative='less')
+    KstestResult(statistic=0.4055137844611529, pvalue=3.5474563068855554e-08)
+    and indeed, with p-value smaller than our threshold, we reject the null
+    hypothesis in favor of the alternative.
+"""
 
 # AUC comparison adapted from
 # https://github.com/Netflix/vmaf/
@@ -168,6 +262,10 @@ def ks_compare_roc_asymptotic(tprs, fprs, methods,n):
     are the same.
 
     Here only the asymptotic ks computation is implemented to work with DCA_ER enviornment 
+    code from scipy: https://github.com/scipy/scipy/blob/main/scipy/stats/_stats_py.py :: ks_2samp function.
+                     -- adapted for ER and fast run.
+                     -- adapted to auto run two-sided test asymptotic.
+                     
     """
     MAX_AUTO_N = 10000  # 'auto' will attempt to be exact if n1,n2 <= MAX_AUTO_N
     mode = 'auto'
@@ -175,8 +273,11 @@ def ks_compare_roc_asymptotic(tprs, fprs, methods,n):
     ROC_KstestResult = namedtuple('KstestResult', ('statistic', 'pvalue'))
     
     results = {}
+
     # getting full length tprs as our cumulative distribution fucntions
-    average_fpr, average_tpr, cdfs  = get_average_roc(tprs, fprs, n_cpus)
+    # we assume at least 2 cpu (4-2). Dont need many for 3 curves
+    average_fpr, average_tpr, cdfs  = get_average_roc(tprs, fprs, n_cpus=4) 
+
     method_combos =combinations(methods, 2) 
     for (method1, method2) in list(method_combos):
         cdf1 = cdfs[methods.index(method1)]
@@ -212,7 +313,95 @@ def ks_compare_roc_asymptotic(tprs, fprs, methods,n):
         ks_test_result = ROC_KstestResult(d, prob)
         ks_val, p_val = ks_test_result[0], ks_test_result[1]
         results["%svs%s" % (method1, method2)] = [(ks_val, p_val)]
-    return results
+       
+    return results, cdfs
+
+def gen_ER_ROC(ct_mat, ER_di, pdb_id, pfam_id, file_end='.npy', gen_uniform_roc=False):
+    # ER ROC
+    auc_ER = np.zeros(n)
+    for i in range(n):
+        try:
+            fpr, tpr, thresholds, auc, ct_pos_flat = roc_curve_new(ct_mat, ER_di, ct_thres[i] ,s_index, ld_thresh=ld_threshold)
+            auc_ER[i] = auc
+        except:
+            auc_ER[i] = 0
+    
+    # Get ER method's best contact prediction
+    i0_ER = np.argmax(auc_ER)
+    print('ER auc max:',ct_thres[i0_ER],auc_ER[i0_ER])
+    fpr0_ER, tpr0_ER, thresholds_ER, auc, tpr_uni, fpr_uni, auc_uni, uni_bins, ct_pos_flat = roc_curve_new(ct_mat, ER_di, ct_thres[i0_ER], s_index, ld_thresh=ld_threshold, get_uniform=True)
+    if gen_uniform_roc:
+        fp_uni_file = "%s%s_%s_ER_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+        tp_uni_file = "%s%s_%s_ER_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+        np.save(fp_uni_file, fpr_uni)
+        np.save(tp_uni_file, tpr_uni)   
+
+    fp_file = "%s%s_%s_ER_fp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+    tp_file = "%s%s_%s_ER_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+    np.save(fp_file, fpr0_ER)
+    np.save(tp_file, tpr0_ER)
+
+    ct_pos_file = "%s%s_%s_ER_ct_flat%s" % (processed_data_dir, pdb_id, pfam_id, file_end)
+    np.save(ct_pos_file, ct_pos_flat)
+
+
+    #print('ER tp raw (len %d): ' % len(tpr0_ER), tpr0_ER[:10])
+    #print('ER tp uni (len %d): ' % len(tpr_uni), tpr_uni[:10])   
+    #print('raw auc: %f, binned auc %f' % (auc, auc_uni))
+
+    print('ER tp raw (len %d): ' % len(tpr0_ER), tpr0_ER[:10])
+    return fpr0_ER, tpr0_ER, ct_thres[i0_ER]
+
+
+def gen_PYDCA_ROC(ct_mat, ER_di, s_index, PYDCA_di_data, pdb_id, pfam_id, method, file_end='.npy', gen_uniform_roc=False):
+    # PMF ROC
+    # translate PMF di tuple to contact matrix
+    PYDCA_di = np.zeros(ER_di.shape)
+    PYDCA_di_dict = {}
+    for score_set in PYDCA_di_data:
+        PYDCA_di_dict[(score_set[0][0], score_set[0][1])] = score_set[1]
+    for i, index_i in enumerate(s_index):
+        for j, index_j in enumerate(s_index):
+            if i==j:
+                PYDCA_di[i,j] = 1.
+                continue
+            try:
+                PYDCA_di[i,j] = PYDCA_di_dict[(index_i, index_j)]
+                PYDCA_di[j,i] = PYDCA_di_dict[(index_i, index_j)] # symetric
+            except(KeyError):
+                continue
+    
+    
+    auc_PYDCA = np.zeros(n)
+    for i in range(n):
+        try:
+            fpr, tpr, thresholds, auc, ct_pos_flat = roc_curve_new(ct_mat, PYDCA_di, ct_thres[i], s_index, ld_thresh=ld_threshold)
+            auc_PYDCA[i] = auc
+        except:
+            auc_PYDCA[i] = 0
+    
+    # Get ER method's best contact prediction
+    i0_PYDCA = np.argmax(auc_PYDCA)
+    print('PYDCA auc max:',ct_thres[i0_PYDCA],auc_PYDCA[i0_PYDCA])
+    fpr0_PYDCA, tpr0_PYDCA, thresholds_PYDCA, auc, tpr_uni, fpr_uni, auc_uni, uni_bins, ct_pos_flat = roc_curve_new(ct_mat, PYDCA_di, ct_thres[i0_PYDCA], s_index, ld_thresh=ld_threshold, get_uniform=True)
+    if gen_uniform_roc:
+        fp_uni_file = "%s%s_%s_%s_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, method, file_end)
+        tp_uni_file = "%s%s_%s_%s_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, method, file_end)
+        np.save(fp_uni_file, fpr_uni)
+        np.save(tp_uni_file, tpr_uni)   
+        print('%s tp uni (len %d): ' % (method, len(tpr_uni)), tpr_uni[:10])   
+
+    fp_file = "%s%s_%s_%s_fp%s" % (out_metric_dir, pdb_id, pfam_id, method, file_end)
+    tp_file = "%s%s_%s_%s_tp%s" % (out_metric_dir, pdb_id, pfam_id, method, file_end)
+    np.save(fp_file, fpr0_PYDCA)
+    np.save(tp_file, tpr0_PYDCA)
+    print('%s tp raw (len %d): ' % (method, len(tpr0_PYDCA)), tpr0_PYDCA[:10])
+    print('raw auc: %f, binned auc %f' % (auc, auc_uni))
+    ct_pos_file = "%s%s_%s_%s_ct_flat%s" % (processed_data_dir, pdb_id, pfam_id, method, file_end)
+    np.save(ct_pos_file, ct_pos_flat)
+  
+    return PYDCA_di, fpr0_PYDCA, tpr0_PYDCA, ct_thres[i0_PYDCA], auc, ct_pos_flat
+   
 
 
 create_new = False
@@ -238,13 +427,24 @@ pdb_dir = '%s/protein_data/pdb_data/' % biowulf_dir
 # pdb_path = "/pdb/pdb/zd/pdb1zdr.ent.gz"
 pdb_id = sys.argv[1]
 pfam_id = sys.argv[2]
-n_cpus = int(sys.argv[3])
 
 file_end = ".npy"
 
+
+
+# pdb_path = "/pdb/pdb/zd/pdb1zdr.ent.gz"
+
+prody_df = pd.read_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
+
+from data_processing import pdb2msa, data_processing_pdb2msa
+
+pdb2msa_row = prody_df.iloc[0]
+
+
  
+# ------------------------------------------------------------------------------------------------------------- # 
+# -------------------------------- Load DI Data --------------------------------------------------------------- # 
 ER_di = np.load("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id))
-MF_di = np.load("%s/%s_%s_MF_di.npy" % (out_dir, pdb_id, pfam_id))
 PMF_di_data = np.load("%s/%s_%s_PMF_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
 PLM_di_data = np.load("%s/%s_%s_PLM_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
 
@@ -253,82 +453,101 @@ s_index = np.load("%s/%s_%s_preproc_sindex.npy" % (processed_data_dir, pfam_id, 
 #pdb_s_index = np.load("%s/%s_%s_preproc_pdb_sindex.npy" % (processed_data_dir, pfam_id, pdb_id))
 removed_cols = np.load("%s/%s_%s_removed_cols.npy" % (processed_data_dir, pfam_id, pdb_id))
 ref_seq = np.load("%s/%s_%s_preproc_refseq.npy" % (processed_data_dir, pfam_id, pdb_id))
+# ------------------------------------------------------------------------------------------------------------- # 
+# ------------------------------------------------------------------------------------------------------------- # 
 
 
-# PMF ROC
-# translate PMF di tuple to contact matrix
-PMF_di = np.zeros(ER_di.shape)
-PMF_di_dict = {}
-for score_set in PMF_di_data:
-    PMF_di_dict[(score_set[0][0], score_set[0][1])] = score_set[1]
-for i, index_i in enumerate(s_index):
-    for j, index_j in enumerate(s_index):
-        if i==j:
-            PMF_di[i,j] = 1.
-            continue
-        try:
-            PMF_di[i,j] = PMF_di_dict[(index_i, index_j)]
-            PMF_di[j,i] = PMF_di_dict[(index_i, index_j)] # symetric
-        except(KeyError):
-            continue
-# PLM ROC
-# translate PMF di tuple to contact matrix
-PLM_di = np.zeros(ER_di.shape)
-PLM_di_dict = {}
-for score_set in PLM_di_data:
-    PLM_di_dict[(score_set[0][0], score_set[0][1])] = score_set[1]
-for i, index_i in enumerate(s_index):
-    for j, index_j in enumerate(s_index):
-        if i==j:
-            PLM_di[i,j] = 1.
-            continue
-        try:
-            PLM_di[i,j] = PLM_di_dict[(index_i, index_j)]
-            PLM_di[j,i] = PLM_di_dict[(index_i, index_j)] # symetric
-        except(KeyError):
-            continue
- 
-ER_fp_file = "%s/%s_%s_ER_fp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-ER_tp_file = "%s/%s_%s_ER_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-ER_fp = np.load(ER_fp_file)
-ER_tp = np.load(ER_tp_file)
 
-PMF_fp_file = "%s/%s_%s_PMF_fp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-PMF_tp_file = "%s/%s_%s_PMF_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-PMF_fp = np.load(PMF_fp_file)
-PMF_tp = np.load(PMF_tp_file)
+# --------------------------------------------------------------------------------------------- #
+# ----------------------------------- Create Contact Map -------------------------------------- #
+# uses pdb2msa_row df for alignement indices beginning and and NOT PFAM
+pdb_s_index = s_index
+ct, ct_full = tools.contact_map_pdb2msa_new(pdb2msa_row, "%s/pdb%s.ent" % (pdb_dir, pdb_id), removed_cols, pdb_s_index, pdb_out_dir=pdb_dir, printing=True) 
+ct_file = "%s%s_%s_ct.npy" % (pdb_dir, pdb_id, pfam_id)
+np.save(ct_file, ct)
 
-PLM_fp_file = "%s/%s_%s_PLM_fp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-PLM_tp_file = "%s/%s_%s_PLM_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-PLM_fp = np.load(PLM_fp_file)
-PLM_tp = np.load(PLM_tp_file)
+#print("Direct Information from Expectation reflection:\n",di)
+print('s_index (%d): ' %len(s_index), s_index)
+print('ER DI shape (before removing cols): ' , ER_di.shape)
+er_di = ER_di
+#if not removing_cols:
+#    er_di = np.delete(di, removed_cols_range,0)
+#    er_di = np.delete(er_di, removed_cols_range,1)
+#else:
+#    er_di = di
 
-MF_fp_file = "%s/%s_%s_MF_fp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-MF_tp_file = "%s/%s_%s_MF_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-MF_fp = np.load(MF_fp_file)
-MF_tp = np.load(MF_tp_file)  
+print('contact dimentions: ', ct.shape)
+print('Final ER DI shape (cols removed): ', er_di.shape)
+if remove_diagonals: 
+    ER_di = no_diag(er_di, 4, s_index)
+else:
+    ER_di = er_di
 
-tprs = [ER_tp, PMF_tp, PLM_tp, MF_tp]
-fprs = [ER_fp, PMF_fp, PLM_fp, MF_fp]
-methods = ['ER', 'PMF', 'PLM', 'MF']
-
-print('di shapes:\nER: %d\nMF: %d\nPMF: %d\nPLM: %d' % (ER_di.shape[1],MF_di.shape[1],PMF_di.shape[1],PLM_di.shape[1] ))
-from math import comb
-print('pair combos (sample size): %d' % comb(ER_di.shape[1],2))
-print('NOTE: Scikit-learn\'s ROC curve returncs tpr, fpr arrays <= len of observations..\ntp lengths:\nER: %d\nMF: %d\nPMF: %d\nPLM: %d' % (len(ER_tp), len(PMF_tp), len(PLM_tp), len(MF_tp)))
+from ecc_tools import scores_matrix2dict
+print(s_index)
+#ER_di_dict = scores_matrix2dict(ER_di, s_index, removed_cols_range, removing_cols=removing_cols)
+#print(ER_di_dict[:20])
 
 
-from generate_average_roc import get_average_roc
-results = ks_compare_roc_asymptotic(tprs, fprs, methods, comb(ER_di.shape[1],2))
-print(results)
+from ecc_tools import roc_curve, roc_curve_new, precision_curve
+# find optimal threshold of distance
+ct_thres = np.linspace(4.,10.,18,endpoint=True)
+n = ct_thres.shape[0]
+
+
+ld_threshold = 0
+if ld_threshold > 0:
+    file_end = '_ld%d.npy' % ld_threshold
+else:
+    file_end = '.npy'
+   
+
+ct_mat = ct
+# --------------------------------------------------------------------------------------------- #
+# --------------------------------------------------------------------------------------------- #
+
+
 
 
 # ------------------------------------------------------------------------------------------------------------------- #
+# -------------------------------- Generate TP/FP Date -------------------------------------------------------------- #
+ER_fp, ER_tp, ER_ct_thres = gen_ER_ROC(ct_mat, ER_di, pdb_id, pfam_id, file_end='.npy', gen_uniform_roc=False)
+
+PMF_di, PMF_fp, PMF_tp, PMF_ct_thres, PMF_auc, PMF_ct_pos_flat = gen_PYDCA_ROC(ct_mat, ER_di, s_index, PMF_di_data, pdb_id, pfam_id, 'PMF', file_end='.npy', gen_uniform_roc=False)
+
+PLM_di, PLM_fp, PLM_tp, PLM_ct_thres, PLM_auc, PLM_ct_pos_flat = gen_PYDCA_ROC(ct_mat, ER_di, s_index, PLM_di_data, pdb_id, pfam_id, 'PLM', file_end='.npy', gen_uniform_roc=False)
+
+tprs = [ER_tp, PMF_tp, PLM_tp]
+fprs = [ER_fp, PMF_fp, PLM_fp]
+methods = ['ER', 'PMF', 'PLM']
+
+print('di shapes:\nER: %d\nPMF: %d\nPLM: %d' % (ER_di.shape[1],PMF_di.shape[1],PLM_di.shape[1] ))
+from math import comb
+
+print('pair combos (sample size): %d' % comb(ER_di.shape[1],2))
+print('NOTE: Scikit-learn\'s ROC curve returncs tpr, fpr arrays <= len of observations..\ntp lengths:\nER: %d\nPMF: %d\nPLM: %d' % (len(ER_tp), len(PMF_tp), len(PLM_tp)))
+
+
+from generate_average_roc import get_average_roc
+results,cdfs = ks_compare_roc_asymptotic(tprs, fprs, methods, comb(ER_di.shape[1],2))
+print(results)
+
+print('\n\nCDF lengths:')
+for i, cdf in enumerate(cdfs):
+    print(len(cdf))
+    cdf_file = "%s%s_%s_%s_cdf.npy" % (out_metric_dir, pdb_id, pfam_id, methods[i])
+print('\n\n')
+# ------------------------------------------------------------------------------------------------------------------- #
+# ------------------------------------------------------------------------------------------------------------------- #
+
+
 # updated version of roc_curve_new 4/7/2022 
 # flat-binary-contact array
 from sklearn.metrics import roc_curve as roc_scikit
 from sklearn.metrics import auc, precision_recall_curve                                                  
 from math import comb
+
+
 
 print('adding De Long AUC comparison..')
 prody_df = pd.read_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
@@ -336,15 +555,12 @@ prody_df = pd.read_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
 from data_processing import pdb2msa, data_processing_pdb2msa
 
 pdb2msa_row = prody_df.iloc[0]
-pfam_id = pdb2msa_row['Pfam']
-
 
 pdb_s_index = s_index
 ct_thres = 6
 ld_thresh = 0
 
 pdb_struct_file = '%spdb%s.ent' % (pdb_dir, pdb_id)
-ct, ct_full = tools.contact_map_pdb2msa_new(pdb2msa_row, pdb_struct_file, removed_cols, pdb_s_index, pdb_out_dir=pdb_dir, printing=True)
 
 ct1 = ct.copy()
 
@@ -370,17 +586,19 @@ old_len = len(ct_flat)
 ct_flat = ct_flat[ld_flat]
 ct_pos_flat = ct[mask][order][ld_flat]
 
+
+ER_di_compare = di_not[mask][order][ld_flat]
+PMF_di_compare = PMF_di[mask][order]
+PLM_di_compare = PLM_di[mask][order]
+
+
 print('observations: ', len(ct_flat))
 fpr, tpr, thresholds = roc_scikit(ct_flat, di_not[mask][order][ld_flat])
 roc_auc= auc(fpr, tpr)
 print('ct thresh %f gives auc = %f' % (ct_thres, roc_auc))
 
-MF_di_compare = MF_di[mask][order]
-PMF_di_compare = PMF_di[mask][order]
-PLM_di_compare = PLM_di[mask][order]
 
-
-method_flat_di = [ER_di[mask][order], PMF_di_compare, PLM_di_compare, MF_di_compare]
+method_flat_di = [ER_di_compare, PMF_di_compare, PLM_di_compare]
 
 method_combos =combinations(methods, 2) 
 for (method1, method2) in list(method_combos):
@@ -396,5 +614,26 @@ result_file = "%s/%s_%s_method_comparison.pkl" % (out_metric_dir, pdb_id, pfam_i
 with open(result_file, "wb") as f:
     pickle.dump(results, f, protocol=None)
     f.close()
+
+
+# number of positions
+n_var = s0.shape[1]
+n_seq = s0.shape[0]
+# compute effective number of sequences
+dst = distance.squareform(distance.pdist(s0, 'hamming'))
+theta = .2 													# minimum necessary distance (theta = 1. - seq_identity_thresh)
+seq_ints = (dst < theta).sum(axis=1).astype(float)
+ma_inv = 1/((dst < theta).sum(axis=1).astype(float))  
+meff = ma_inv.sum()
+
+print("Number of residue positions:",n_var)
+print("Number of sequences:",n_seq)
+print('N_effective ', meff)
+
+
+# save relevant data for categorizing contact prediction metrics
+pfam_dimensions = [n_var, n_seq, meff, ER_ct_thres,  PMF_ct_thres,  PLM_ct_thres]
+pfam_dimensions_file = "%s%s_%s_pfam_dimensions%s" % (processed_data_dir, pdb_id, pfam_id, file_end)
+np.save(pfam_dimensions_file, pfam_dimensions)
 
 

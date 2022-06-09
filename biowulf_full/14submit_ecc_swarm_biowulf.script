@@ -1,28 +1,70 @@
 #!/bin/bash
 
 # prep data using pdb2msa pipeline
-#swarm -f pdb2msa_ER_0.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
-#swarm -f pdb2msa_MF.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PMF.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_ER_0.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+#swarm -f pdb2msa_MF_0.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100					# COMPLETED 
+#swarm -f pdb2msa_PMF_0.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100                               # COMPLETED  
+#swarm -f pdb2msa_PLM_0.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 				# COMPLETED
 
 # second batch: ER: 4/11/22
-#swarm -f pdb2msa_ER_1.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
-#swarm -f pdb2msa_MF.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PMF.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_ER_1.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+#####Not running MF since PMF and MF were shown to be the same (correlation level)
+#####swarm -f pdb2msa_MF_1.swarm  -g 150 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 1 # -b 100 #  quick # norm 
+# swarm -f pdb2msa_PMF_1.swarm  -g  150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 1 # -b 100 #  quick # norm       # COMPLETED
+# swarm -f pdb2msa_PLM_1.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm               # COMPLETED
 
 # third batch: ER: 4/12/22
-#swarm -f pdb2msa_ER_2.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
-#swarm -f pdb2msa_MF.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PMF.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_ER_2.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm			# COMPLETED
+#swarm -f pdb2msa_PMF_2.swarm  -g  150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 1 # -b 100 #  quick # norm        # EMPTY???
+#swarm -f pdb2msa_PLM_2.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm                # EMPTY???
 
 # fourth batch: ER: 4/13/22 -- Happy Birthday Ray-Ray
-swarm -f pdb2msa_ER_3.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
-#swarm -f pdb2msa_MF.swarm  -g 50 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PMF.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
-#swarm -f pdb2msa_PLM.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output # -b 1 # -b 100 #  quick # norm
+#swarm -f pdb2msa_ER_3.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm			# COMPLETED
+#swarm -f pdb2msa_PMF_3.swarm  -g  150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 1 # -b 100 #  quick # norm        # COMPLETED
+#swarm -f pdb2msa_PLM_3.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm                # COMPLETED
+
+
+# fifth batch: ER: 4/21/22
+#swarm -f pdb2msa_ER_4.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm  		# COMPLETED
+#swarm -f pdb2msa_PMF_4.swarm  -g  150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 1 # -b 100 #  quick # norm         # 
+#swarm -f pdb2msa_PLM_4.swarm  -g 150 -t 32 --time=5:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm                 #
+
+
+#-------------------------------------- Replaced ------------------------------------------------------------------------------#
+# sixth batch: ER: 4/25/22
+# swarm -f pdb2msa_ER_5.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
+# THIS DID NOT WORK NEED TO SPLIT INTO DATA_PREP swarm with 1 TB and then stratify
+#----------------------------- Sim 5 ------------------------------------------------------------------------------------------#
+# ER_5 stratified swarms: 5/17/22 # Completed
+#swarm -f pdb2msa_ER_5_750p.swarm  -g 1000 -t 50 --time=2:00:00 --partition norm --logdir swarm_output --partition=largemem -b 20 # -b 100  	# COMPLETED
+#swarm -f pdb2msa_ER_5_500p.swarm  -g 750 -t 50 --time=2:00:00 --partition norm --logdir swarm_output --partition=largemem -b 20 # -b 100 	# COMPLETED
+#swarm -f pdb2msa_ER_5_300p.swarm  -g 500 -t 50 --time=2:00:00 --partition norm --logdir swarm_output  --partition=largemem -b 20 # -b 100      # COMPLETED
+#swarm -f pdb2msa_ER_5_150p.swarm  -g 300 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+#swarm -f pdb2msa_ER_5_small.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+
+#swarm -f pdb2msa_PLM_5_750p.swarm  -g 1000 -t 50 --time=2:00:00 --partition norm --logdir swarm_output --partition=largemem -b 20 # -b 100  	# COMPLETED
+#swarm -f pdb2msa_PLM_5_500p.swarm  -g 750 -t 50 --time=2:00:00 --partition norm --logdir swarm_output --partition=largemem -b 20 # -b 100 	# COMPLETED
+#swarm -f pdb2msa_PLM_5_300p.swarm  -g 500 -t 50 --time=2:00:00 --partition norm --logdir swarm_output  --partition=largemem -b 20 # -b 100      # COMPLETED
+#swarm -f pdb2msa_PLM_5_150p.swarm  -g 300 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+#swarm -f pdb2msa_PLM_5_small.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+
+#swarm -f pdb2msa_PMF_5_750p.swarm  -g 1000 -t 50 --time=2:00:00 --partition norm --logdir swarm_output --partition=largemem -b 20 # -b 100  	# COMPLETED
+#swarm -f pdb2msa_PMF_5_500p.swarm  -g 750 -t 50 --time=2:00:00 --partition norm --logdir swarm_output --partition=largemem -b 20 # -b 100 	# COMPLETED
+#swarm -f pdb2msa_PMF_5_300p.swarm  -g 500 -t 50 --time=2:00:00 --partition norm --logdir swarm_output  --partition=largemem -b 20 # -b 100      # COMPLETED
+#swarm -f pdb2msa_PMF_5_150p.swarm  -g 300 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+#swarm -f pdb2msa_PMF_5_small.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logdir swarm_output -b 20 # -b 100 				# COMPLETED
+#------------------------------------------------------------------------------------------------------------------------------#
+
+
+#--------------- Residual PLM/PMF PYDCA simulations (Generated from pdb2msa_PLM/PMF_residual.swarm) ---------------------------#
+#swarm -f pdb2msa_PLM_res1.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
+#swarm -f pdb2msa_PLM_res2.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
+#swarm -f pdb2msa_PLM_res3.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
+
+#swarm -f pdb2msa_PMF_res1.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
+swarm -f pdb2msa_PMF_res2.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
+#swarm -f pdb2msa_PMF_res3.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
+#------------------------------------------------------------------------------------------------------------------------------#
 
 
 
@@ -33,4 +75,5 @@ swarm -f pdb2msa_ER_3.swarm  -g 150 -t 32 --time=2:00:00 --partition norm --logd
 #swarm -f bootstrap_ER.swarm -g 150 -t 42 --time=1:00:00 --partition norm --logdir swarm_output -b 5 # -b 100 #  quick # norm
 
 # swarm -f ks_exact.swarm -g 10 --time=10:00 --partition norm --logdir swarm_output -b 100 # -b 100 #  quick # norm
-#swarm -f compare_asymptotic.swarm -g 10 --time=10:00 --partition norm --logdir swarm_output -b 100 # -b 100 #  quick # norm
+#swarm -f compare_asymptotic.swarm -g 10 --time=10:00 --partition quick --logdir swarm_output -b 100 # -b 100 #  quick # norm
+#swarm -f method_comparison_ks.swarm -g 150 --time=10:00 --partition quick --logdir swarm_output -b 20 # -b 100 #  quick # norm

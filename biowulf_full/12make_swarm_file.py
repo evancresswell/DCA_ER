@@ -2,47 +2,21 @@ import os
 import numpy as np
 from pathlib import Path
 
-if 0:
-	#pfam_list = np.loadtxt('pfam_list.txt',dtype='str')
-	#s1 = np.loadtxt('pfam_10_20k.txt',dtype='str')
-	#s2 = np.loadtxt('pfam_20_40k.txt',dtype='str')
-	#s3 = np.loadtxt('pfam_40_100k.txt',dtype='str')
-
-	#s = np.vstack([s1,s2])
-	#s = np.vstack([s,s3])
-
-	s = np.loadtxt('pfam_10_20k.txt',dtype='str')
-	
-	n = s.shape[0]
-	pfam_list = s[:,0]
-
-	#--------------------------------------------------------------
-	# create pfam folder
-	for i in range(n):
-	    os.system('rm -r %s'%(pfam_list[i]))
-	    os.system('mkdir %s'%(pfam_list[i]))
-
-	#--------------------------------------------------------------
-	# create swarmfile
-	f = open('swarmfile.txt','w')
-	for pfam in pfam_list:
-	    #f.write('python 1main_DCA.py %s\n'%(pfam))
-	    f.write('python 1main_ER.py %s\n'%(pfam))    
-	    #f.write('python 1main_ERM.py %s\n'%(pfam))
-
-	f.close()
-
+# # Get memory used for every simulation. use this to stratify further simulations
+# dashboard_cli jobs -u cresswellclayec --jobid 38114094_* --fields jobid,mem_max
 
 import os
 import numpy as np
 
-blocking = False
 #pdb_list = np.loadtxt('full_pdb_list.txt',dtype='str')
 
-if blocking:
+# DATA PREP
+# Generate swarm for intial simulations
+# Generates data prep simulation
+if 1:
     pdb_path = "./"
     result = list(Path(pdb_path).rglob("pdb_list_*.txt"))
-    pdb_lists = [str(path) for path in result]
+    pdb_lists = ["pdb_list_%d.txt" % i for i in range(10) ]
     
     for i, pdb_list_path in enumerate(pdb_lists):
         pdb_list = np.loadtxt(pdb_list_path, dtype='str')
@@ -51,6 +25,26 @@ if blocking:
         #--------------------------------------------------------------#
         # create swarmfiles for each method
         
+        f = open('pdb2msa_data_prep_%d.swarm' % i,'w')
+        #for pdb in s_er:
+        for pdb in pdb_list:
+            f.write('source /data/cresswellclayec/conda/etc/profile.d/conda.sh; ')
+            f.write('conda activate DCA_ER; ')
+            f.write('python data_prep.py %s\n'%(pdb))
+            #f.write('module load singularity; ')
+            #f.write('singularity exec -B /data/cresswellclayec/DCA_ER/biowulf/ /data/cresswellclayec/DCA_ER/dca_er.simg python 1main_ER.py %s\n'%(pdb))
+        f.close()
+ 
+        
+
+        #--------------------------------------------------------------#
+
+
+# ER SIMULATION
+# Generates ER simulations.
+# organizes by memory used
+# NEED data_prep swarm job_id!!!
+if 0:
         f = open('pdb2msa_ER_%d.swarm' % i,'w')
         #for pdb in s_er:
         for pdb in pdb_list:
@@ -60,19 +54,12 @@ if blocking:
             #f.write('module load singularity; ')
             #f.write('singularity exec -B /data/cresswellclayec/DCA_ER/biowulf/ /data/cresswellclayec/DCA_ER/dca_er.simg python 1main_ER.py %s\n'%(pdb))
         f.close()
-    
-        f = open('pdb2msa_MF_%d.swarm' % i,'w')
-        #for pdb in s_er:
-        for pdb in pdb_list:
-            f.write('source /data/cresswellclayec/conda/etc/profile.d/conda.sh; ')
-            f.write('conda activate DCA_ER; ')
-            f.write('python run_pdb2msa_MF.py %s $SLURM_CPUS_PER_TASK\n'%(pdb))
-            #f.write('module load singularity; ')
-            #f.write('singularity exec -B /data/cresswellclayec/DCA_ER/biowulf/ /data/cresswellclayec/DCA_ER/dca_er.simg python 1main_ER.py %s\n'%(pdb))
-        f.close()
-    
-        #--------------------------------------------------------------#
-else:    
+
+
+
+# Generate swarm for resulting simulations 
+# Generates MF, PYMF, PYPLM simulations.
+if 0:    
     pdb_list_path = "pdb_ER_list.txt"
     pdb_list = np.loadtxt(pdb_list_path, dtype='str')
     
