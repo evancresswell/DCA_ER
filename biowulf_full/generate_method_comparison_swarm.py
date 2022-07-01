@@ -57,9 +57,16 @@ PLM_di_files_str = [str(os.path.basename(path)) for path in PLM_di_files]
 PLM_pdb_ids = [di_str[:4] for di_str in PLM_di_files_str] 
 PLM_pfam_ids = [di_str[5:12] for di_str in PLM_di_files_str] 
 
+mc_files = list(Path(out_metric_dir).rglob("*method_comparison.pkl"))
+mc_files_str = [str(os.path.basename(path)) for path in mc_files]
+mc_pdb_ids = [di_str[:4] for di_str in mc_files_str] 
+mc_pfam_ids = [di_str[5:12] for di_str in mc_files_str] 
+
+
+
 # get intersection of sets
 comparison_pdb_str_set = set.intersection(set(ER_pdb_ids), set(PLM_pdb_ids), set(PMF_pdb_ids))
-comparison_pdb_set = [pdb for pdb in comparison_pdb_str_set]
+comparison_pdb_set = [pdb for pdb in comparison_pdb_str_set if pdb not in mc_pdb_ids] # check that file doesent already exist
 
 if 0:
     # if we dont want to run comparison on methods that have already been compared

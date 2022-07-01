@@ -38,9 +38,13 @@ from data_processing import pdb2msa, data_processing
 import ecc_tools as tools
 from pathlib import Path
 
+import matplotlib.backends.backend_pdf
+
 colors_hex = {"red": "#e41a1c", "blue": "#2258A5", "green": "#349C55", "purple": "#984ea3", "orange": "#FF8B00",
                       "yellow": "#ffff33", "grey": "#BBBBBB"}
 colors_key = ["blue", "orange", "green"]
+method2color = {"ER":"blue", "MF":"orange", "PLM":"green"}
+
 
 
 def plot_di_compare_methods(ax, ct_flat, di1_flat, di2_flat, ld_flat, labels):
@@ -75,7 +79,7 @@ def plot_di_compare_methods(ax, ct_flat, di1_flat, di2_flat, ld_flat, labels):
     return ax
 
 
-def pydca_tp_plot(method_visualizers, methods, ld=4, contact_dist=5.):
+def pydca_tp_plot(method_visualizers, methods, pdf_obj, ld=4, contact_dist=5.):
 
     fig = plt.figure(figsize=(5,5))
     ax1 = plt.subplot2grid((1,1), (0,0))
@@ -101,12 +105,13 @@ def pydca_tp_plot(method_visualizers, methods, ld=4, contact_dist=5.):
             Residue chain distance : {}
             '''
             #ax.set_title(ax_title.format(self.__contact_dist, self.__linear_dist,))
-            ax1.set_xlabel('Rank (log scalled)', fontsize=14)
+            ax1.set_xlabel('Rank', fontsize=14)
             ax1.set_ylabel('True Positives/Rank', fontsize=14)
             plt.legend()
             plt.grid()
             plt.tight_layout()
-        plt.savefig('%s_%s_pydca_tp_rate.pdf' % (pdb_id, pfam_id) )
+        #plt.savefig('%s_%s_pydca_tp_rate.pdf' % (pdb_id, pfam_id) )
+        pdf_obj.savefig( fig )
         
     else:
         true_positive_rates_dict = method_visualizers[0].compute_true_positive_rates()
@@ -116,7 +121,7 @@ def pydca_tp_plot(method_visualizers, methods, ld=4, contact_dist=5.):
         ranks = [i + 1 for i in range(max_rank)]
         
                     
-        ax1.plot(ranks, tpr)
+        ax1.plot(ranks, tpr, color=colors_hex[method2color[method[0]]])
         ax1.plot(ranks, pdb_tpr, color='k')
         ax1.set_xscale('log')
         ax_title = '''
@@ -125,13 +130,14 @@ def pydca_tp_plot(method_visualizers, methods, ld=4, contact_dist=5.):
         Residue chain distance : {}
         '''
         #ax.set_title(ax_title.format(self.__contact_dist, self.__linear_dist,))
-        ax1.set_xlabel('Rank (log scalled)', fontsize=14)
+        ax1.set_xlabel('Rank', fontsize=14)
         ax1.set_ylabel('True Positives/Rank', fontsize=14)
         plt.grid()
         plt.tight_layout()
-        plt.savefig('%s_%s_%s_pydca_tp_rate.pdf' % (pdb_id, pfam_id, methods[0]) )
+        #plt.savefig('%s_%s_%s_pydca_tp_rate.pdf' % (pdb_id, pfam_id, methods[0]) )
+        pdf_obj.savefig( fig )
     
-def pydca_contact_plot(method_visualizer, method, ld=4, contact_dist=5. ):
+def pydca_contact_plot(method_visualizer, method , pdf_obj, ld=4, contact_dist=5.):
     contact_categories_dict = method_visualizer.contact_categories()
     true_positives = contact_categories_dict['tp']
     false_positives = contact_categories_dict['fp']
@@ -170,7 +176,9 @@ def pydca_contact_plot(method_visualizer, method, ld=4, contact_dist=5. ):
     ax2.set_ylabel('Residue Position', fontsize=14)
     #ax2.set_title(ax_title)
     plt.tight_layout()
-    plt.savefig('%s_%s_%s_pydca_contact_map.pdf' % (pdb_id, pfam_id, method) )
+    # plt.savefig('%s_%s_%s_pydca_contact_map.pdf' % (pdb_id, pfam_id, method) )
+    pdf_obj.savefig( fig )
+    
     
     
 def plot_di_vs_ct(ax, ct_flat, dist_flat, dis_flat, ld_flat, labels):
@@ -210,8 +218,16 @@ pdb_dir = '%s/protein_data/pdb_data/' % biowulf_dir
 pfam_dir = "/fdb/fastadb/pfam"
 
 # PDB ID: 1zdr, Pfam ID: PF00186
-pdb_id = '1zdr'
-pfam_id = 'PF00186'
+pdb_id = sys.argv[1]
+pfam_id = sys.argv[2]
+#pdb_id = '1zdr'
+#pfam_id = 'PF00186'
+
+# create output pdf object
+pdf_output = matplotlib.backends.backend_pdf.PdfPages('single_protein_plots/%s_%s_plots.pdf' % (pdb_id, pfam_id) )
+
+
+
 ref_outfile = Path(processed_data_dir, '%s_ref.fa' % pfam_id)
 prody_df = pd.read_csv('%s/%s_pdb_df.csv' % (pdb_dir, pdb_id))
 pdb2msa_row  = prody_df.iloc[0]
@@ -286,14 +302,14 @@ er_visualizer = contact_visualizer.DCAVisualizer('protein', pdb_chain, pdb_id,
 
 
 
-pydca_contact_plot(plmdca_visualizer, 'PLM', ld=4, contact_dist=5.)
-pydca_contact_plot(er_visualizer, 'ER', ld=4, contact_dist=5.)
-pydca_contact_plot(mfdca_visualizer, 'MF', ld=4, contact_dist=5.)
+pydca_contact_plot(plmdca_visualizer, 'PLM', pdf_output, ld=4, contact_dist=5.)
+pydca_contact_plot(er_visualizer, 'ER', pdf_output, ld=4, contact_dist=5.)
+pydca_contact_plot(mfdca_visualizer, 'MF', pdf_output, ld=4, contact_dist=5.)
 colors = ['b', 'r', 'g']
-pydca_tp_plot( [er_visualizer, mfdca_visualizer, plmdca_visualizer], methods = [ 'ER', 'MF','PLM'],ld=4, contact_dist=5. )
-pydca_tp_plot( [plmdca_visualizer ], methods = ['PLM'],ld=4, contact_dist=5. )
-pydca_tp_plot( [ mfdca_visualizer], methods = ['MF'],ld=4, contact_dist=5. )
-pydca_tp_plot( [er_visualizer], methods = [ 'ER'],ld=4, contact_dist=5. )
+pydca_tp_plot( [er_visualizer, mfdca_visualizer, plmdca_visualizer], [ 'ER', 'MF','PLM'],pdf_output, ld=4, contact_dist=5. )
+pydca_tp_plot( [plmdca_visualizer ],['PLM'],pdf_output, ld=4, contact_dist=5. )
+pydca_tp_plot( [ mfdca_visualizer], ['MF'],pdf_output, ld=4, contact_dist=5. )
+pydca_tp_plot( [er_visualizer],  [ 'ER'],pdf_output, ld=4, contact_dist=5. )
 
 # --- Plot DI vs Distance ER --- %
 # Define data directories
@@ -313,7 +329,6 @@ ct = np.load(ct_file)
 
 # load DI data
 ER_di = np.load("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id))
-MF_di = np.load("%s/%s_%s_MF_di.npy" % (out_dir, pdb_id, pfam_id))
 PMF_di_data = np.load("%s/%s_%s_PMF_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
 PLM_di_data = np.load("%s/%s_%s_PLM_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
 
@@ -337,10 +352,10 @@ plm_tp = np.load(tp_file)
 
 
 
-fp_uni_file = "%s%s_%s_ER_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-tp_uni_file = "%s%s_%s_ER_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-er_fp_uni = np.load(fp_uni_file)
-er_tp_uni = np.load(tp_uni_file)
+#fp_uni_file = "%s%s_%s_ER_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+#tp_uni_file = "%s%s_%s_ER_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+#er_fp_uni = np.load(fp_uni_file)
+#er_tp_uni = np.load(tp_uni_file)
 
 
 ct1 = ct.copy()
@@ -369,13 +384,13 @@ dist_flat = ct[mask][order]
 labels = ['ER']
 flat_dis =  [ER_di_flat]
 
-plt.figure(figsize=(5,5))
+fig = plt.figure(figsize=(5,5))
 ax = plt.subplot2grid((1,1),(0,0))
 ax = plot_di_vs_ct(ax, ct_flat, dist_flat, flat_dis, ld_flat, labels)
 plt.tight_layout()
 # ax.legend()
-plt.savefig('%s_%s_%s_di_dist.pdf' % (pdb_id, pfam_id, 'ER') )
-
+#plt.savefig('%s_%s_%s_di_dist.pdf' % (pdb_id, pfam_id, 'ER') )
+pdf_output.savefig( fig )
 
 # --- Compare Methods --- #
 PMF_di_data = np.load("%s/%s_%s_PMF_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
@@ -419,10 +434,10 @@ tp_file = "%s%s_%s_PLM_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
 plm_fp = np.load(fp_file)
 plm_tp = np.load(tp_file)
 
-fp_uni_file = "%s%s_%s_PLM_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-tp_uni_file = "%s%s_%s_PLM_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-plm_fp_uni = np.load(fp_uni_file)
-plm_tp_uni = np.load(tp_uni_file)
+#fp_uni_file = "%s%s_%s_PLM_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+#tp_uni_file = "%s%s_%s_PLM_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+#plm_fp_uni = np.load(fp_uni_file)
+#plm_tp_uni = np.load(tp_uni_file)
 
 ct_pos_file = "%s%s_%s_PLM_ct_flat%s" % (processed_data_dir, pdb_id, pfam_id, file_end)
 plm_ct_flat = np.load(ct_pos_file)
@@ -434,10 +449,10 @@ tp_file = "%s%s_%s_PMF_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
 pmf_fp = np.load(fp_file)
 pmf_tp = np.load(tp_file)
 
-fp_uni_file = "%s%s_%s_PMF_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-tp_uni_file = "%s%s_%s_PMF_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
-pmf_fp_uni = np.load(fp_uni_file)
-pmf_tp_uni = np.load(tp_uni_file)
+#fp_uni_file = "%s%s_%s_PMF_fp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+#tp_uni_file = "%s%s_%s_PMF_tp_uni%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
+#pmf_fp_uni = np.load(fp_uni_file)
+#pmf_tp_uni = np.load(tp_uni_file)
 
 ct_pos_file = "%s%s_%s_PMF_ct_flat%s" % (processed_data_dir, pdb_id, pfam_id, file_end)
 pmf_ct_flat = np.load(ct_pos_file)
@@ -449,25 +464,27 @@ PMF_di_flat = PMF_di[mask][order] # get array of pmf di in the order of ER di to
 
 flat_dis =  [ER_di_flat, PLM_di_flat]
 labels = ['ER', 'PLM']
-plt.figure(figsize=(5,5))
+fig = plt.figure(figsize=(5,5))
 ax = plt.subplot2grid((1,1),(0,0))
 ax = plot_di_compare_methods(ax, ct_flat, flat_dis[0], flat_dis[1], ld_flat, labels)
 ax.legend()
 
 plt.tight_layout()
-plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+#plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+pdf_output.savefig( fig )
 
 
 flat_dis =  [ER_di_flat, PMF_di_flat]
 labels = ['ER', 'MF']
-plt.figure(figsize=(5,5))
+fig = plt.figure(figsize=(5,5))
 ax2 = plt.subplot2grid((1,1),(0,0))
 ax2 = plot_di_compare_methods(ax2, ct_flat, flat_dis[0], flat_dis[1], ld_flat, labels)
 ax2.legend()
 plt.tight_layout()
-plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+#plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+pdf_output.savefig( fig )
 
-plt.figure(figsize=(5,5))
+fig = plt.figure(figsize=(5,5))
 ax = plt.subplot2grid((1,1),(0,0))
 ax.plot(er_fp, er_tp, label='ER', color=colors_hex[colors_key[0]])
 ax.plot(pmf_fp, pmf_tp, label='MF', color=colors_hex[colors_key[1]])
@@ -476,6 +493,9 @@ ax.set_ylabel('True Positive Rate', fontsize=14)
 ax.set_xlabel('False Positive Rate', fontsize=14)
 ax.legend()
 plt.tight_layout()
-plt.savefig('%s_%s_roc_comparison.pdf' % (pdb_id, pfam_id) )
+#plt.savefig('%s_%s_roc_comparison.pdf' % ( pdb_id, pfam_id) )
+pdf_output.savefig( fig )
+
+pdf_output.close()
 
 

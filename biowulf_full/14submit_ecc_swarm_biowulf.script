@@ -62,7 +62,7 @@
 #swarm -f pdb2msa_PLM_res3.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
 
 #swarm -f pdb2msa_PMF_res1.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
-swarm -f pdb2msa_PMF_res2.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
+#swarm -f pdb2msa_PMF_res2.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
 #swarm -f pdb2msa_PMF_res3.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --logdir swarm_output --partition=norm -b 20 # -b 100  	
 #------------------------------------------------------------------------------------------------------------------------------#
 
@@ -76,4 +76,5 @@ swarm -f pdb2msa_PMF_res2.swarm  -g 120 -t 20 --time=2:00:00 --partition norm --
 
 # swarm -f ks_exact.swarm -g 10 --time=10:00 --partition norm --logdir swarm_output -b 100 # -b 100 #  quick # norm
 #swarm -f compare_asymptotic.swarm -g 10 --time=10:00 --partition quick --logdir swarm_output -b 100 # -b 100 #  quick # norm
-#swarm -f method_comparison_ks.swarm -g 150 --time=10:00 --partition quick --logdir swarm_output -b 20 # -b 100 #  quick # norm
+#swarm -f method_comparison_ks.swarm -g 150 --time=10:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
+swarm -f data_processing_comparison.swarm -g 150 --time=10:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm

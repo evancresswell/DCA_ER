@@ -100,7 +100,7 @@ for ir, pdb2msa_row in enumerate(prody_df.iterrows()):
     try:
         dp_result =  data_processing_pdb2msa(data_path, prody_df.iloc[pdb2msa_row[0]], gap_seqs=0.2, gap_cols=0.2, prob_low=0.004,
                                conserved_cols=0.8, printing=True, out_dir=processed_data_dir, pdb_dir=pdb_dir, letter_format=False,
-                               remove_cols=True, create_new=True, n_cpu=min(2, n_cpus))
+                               remove_cols=True, create_new=True)
         if dp_result is not None:
             [s0, removed_cols, s_index, tpdb, pdb_s_index] = dp_result
             break
