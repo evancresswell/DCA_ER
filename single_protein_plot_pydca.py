@@ -79,7 +79,7 @@ def plot_di_compare_methods(ax, ct_flat, di1_flat, di2_flat, ld_flat, labels):
     return ax
 
 
-def pydca_tp_plot(method_visualizers, methods, pdf_obj, ld=4, contact_dist=5.):
+def pydca_tp_plot(method_visualizers, methods, pdf_obj, ld=4, contact_dist=10.):
 
     fig = plt.figure(figsize=(5,5))
     ax1 = plt.subplot2grid((1,1), (0,0))
@@ -121,7 +121,7 @@ def pydca_tp_plot(method_visualizers, methods, pdf_obj, ld=4, contact_dist=5.):
         ranks = [i + 1 for i in range(max_rank)]
         
                     
-        ax1.plot(ranks, tpr, color=colors_hex[method2color[method[0]]])
+        ax1.plot(ranks, tpr, color=colors_hex[method2color[methods[0]]])
         ax1.plot(ranks, pdb_tpr, color='k')
         ax1.set_xscale('log')
         ax_title = '''
@@ -137,7 +137,7 @@ def pydca_tp_plot(method_visualizers, methods, pdf_obj, ld=4, contact_dist=5.):
         #plt.savefig('%s_%s_%s_pydca_tp_rate.pdf' % (pdb_id, pfam_id, methods[0]) )
         pdf_obj.savefig( fig )
     
-def pydca_contact_plot(method_visualizer, method , pdf_obj, ld=4, contact_dist=5.):
+def pydca_contact_plot(method_visualizer, method , pdf_obj, ld=4, contact_dist=10.):
     contact_categories_dict = method_visualizer.contact_categories()
     true_positives = contact_categories_dict['tp']
     false_positives = contact_categories_dict['fp']
@@ -178,7 +178,80 @@ def pydca_contact_plot(method_visualizer, method , pdf_obj, ld=4, contact_dist=5
     plt.tight_layout()
     # plt.savefig('%s_%s_%s_pydca_contact_map.pdf' % (pdb_id, pfam_id, method) )
     pdf_obj.savefig( fig )
+
+def plot_contact_map_ecc(ax2, method, pairs_flat, ct_flat, dist_flat, ER_di_flat, ct_ER, ld_val=5):
     
+
+        
+    x_true_positives = []
+    y_true_positives = []
+    
+    x_false_positives = []
+    y_false_positives = []
+    
+    x_pdb = []
+    y_pdb = []
+    
+    
+    # define (i,j) pairs as top-L ranked di scores (L is length of protein) i > j (ie bottom triagular)
+    counter = 0
+    rank = len(s_index)
+    for i, pair in enumerate(pairs_flat):
+#         if pair[0] > pair[1]:
+#             x = pair[0]
+#             y = pair[1]
+#         else:
+#             x = pair[1]
+#             y = pair[0]
+        x=pair[0]
+        y=pair[1]
+        if abs(x-y)<ld_val:
+            pass
+        if dist_flat[i]<=ct_ER and x not in x_true_positives:
+            x_true_positives.append(x)
+            y_true_positives.append(y)
+            counter += 1
+        elif dist_flat[i]<=ct_ER and x in x_true_positives:
+            pass
+        elif dist_flat[i]>ct_ER and x not in x_false_positives:
+            x_false_positives.append(x)
+            y_false_positives.append(y)
+            counter += 1
+        else:
+            pass
+        if counter >= rank:
+            break
+    
+    for i, pair in enumerate(pairs_flat):
+        x=pair[0]
+        y=pair[1]
+        if abs(x-y)<ld_val:
+            pass
+        if dist_flat[i]<=ct_ER:
+            x_pdb.append(x)
+            y_pdb.append(y)
+    
+    
+    ax_title = '''
+    Method: {}
+    Maximum PDB contact distance : {} Angstrom
+    Minimum residue chain distance: {} residues
+    Fraction of true positives : {:.3g}
+    '''.format(method, ct_ER, ld_val,
+        len(x_true_positives)/(len(x_true_positives) + len(x_false_positives)),
+    )
+    
+    ax2.scatter(y_true_positives, x_true_positives, s=6, color='green')
+    ax2.scatter(y_false_positives, x_false_positives, s=6, color='red')
+    ax2.scatter(x_pdb, y_pdb, s=6, color='grey')
+    ax2.set_xlabel('Residue Position', fontsize=14)
+    ax2.set_ylabel('Residue Position', fontsize=14)
+    ax2.set_title(ax_title)
+    #ax2.set_title(ax_title)
+#     # plt.savefig('%s_%s_%s_pydca_contact_map.pdf' % (pdb_id, pfam_id, method) )
+#     if pdf_obj is not None:
+#         pdf_obj.savefig( fig )
+    return ax2    
     
     
 def plot_di_vs_ct(ax, ct_flat, dist_flat, dis_flat, ld_flat, labels):
@@ -194,6 +267,56 @@ def plot_di_vs_ct(ax, ct_flat, dist_flat, dis_flat, ld_flat, labels):
 
     ax.set_xlabel('Distance ($\AA$)', fontsize=14)
     ax.set_ylabel('DI', fontsize=14)
+    return ax
+
+
+
+
+def plot_true_positive_rates_ecc(method_visualizers, tps, methods, contact_dist, linear_dist, ax):
+    """Plotes the true positive rate per rank of DCA ranked site pairs.
+    The x-axis is in log scale.
+
+    Parameters
+    ----------
+        self : DCAVisualizer
+
+    Returns
+    -------
+        true_positive_rates_dict : dict
+            A dictionary whose keys are true positives types (pdb, or dca)
+            and whose values are the corresponding true positive rates per
+            rank.
+
+    """
+    mv = method_visualizers[0]
+    true_positive_rates_dict = mv.compute_true_positive_rates()
+    pdb_tpr = true_positive_rates_dict['pdb']
+    max_rank = len(pdb_tpr)
+    pdb_ranks = [i + 1 for i in range(max_rank)]
+    ax.plot(pdb_ranks, pdb_tpr,color='k')
+    
+    for i, tp in enumerate(tps):
+        max_rank = len(tp)
+        ranks = [j + 1 for j in range(max_rank)]
+        tpr = [t/ranks[j] for j,t in enumerate(tp)]
+        ax.plot(ranks, tpr, color=colors_hex[method2color[methods[i]]],label=methods[i])
+
+        ax.set_xscale('log')
+        ax_title = '''
+        True Positive Rate Per Rank
+        PDB cut-off distance : {} Angstrom
+        Residue chain distance : {}
+        '''
+    ax.set_title(ax_title.format(
+            contact_dist, linear_dist,
+        )
+    )
+    ax.set_xlabel('Rank', fontsize=14)
+    ax.set_ylabel('True Positives/rank', fontsize=14)
+    plt.legend(fontsize=14)
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
     return ax
 
 
@@ -238,6 +361,9 @@ pfam_id = pdb2msa_row['Pfam']
 pdb_id = pdb2msa_row['PDB ID']
 pdb_chain = pdb2msa_row['Chain']
 
+
+
+
 # --- Load scores --- #
 plm_out_file = "%s/%s_%s_PLM_di.npy" % (out_dir, pdb_id, pfam_id)
 mf_out_file = "%s/%s_%s_PMF_di.npy" % (out_dir, pdb_id, pfam_id)
@@ -250,6 +376,46 @@ s_index = np.load("%s/%s_%s_preproc_sindex.npy" % (processed_data_dir, pfam_id, 
 from ecc_tools import scores_matrix2dict
 ER_scores = scores_matrix2dict(ER_di, s_index)
 # ------------------- #
+# load DI data
+ER_di = np.load("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id))
+
+# --- Compare Methods --- #
+PMF_di_data = np.load("%s/%s_%s_PMF_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
+PLM_di_data = np.load("%s/%s_%s_PLM_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
+
+
+# transform pydca DI dictionary to DI matrices.
+PLM_di = np.zeros(ER_di.shape)
+PLM_di_dict = {}
+for score_set in PLM_di_data:
+    PLM_di_dict[(score_set[0][0], score_set[0][1])] = score_set[1]
+for i, index_i in enumerate(s_index):
+    for j, index_j in enumerate(s_index):
+        if i==j:
+            PLM_di[i,j] = 1.
+            continue
+        try:
+            PLM_di[i,j] = PLM_di_dict[(index_i, index_j)]
+            PLM_di[j,i] = PLM_di_dict[(index_i, index_j)] # symetric
+        except(KeyError):
+            continue
+
+PMF_di = np.zeros(ER_di.shape)
+PMF_di_dict = {}
+for score_set in PMF_di_data:
+    PMF_di_dict[(score_set[0][0], score_set[0][1])] = score_set[1]
+for i, index_i in enumerate(s_index):
+    for j, index_j in enumerate(s_index):
+        if i==j:
+            PMF_di[i,j] = 1.
+            continue
+        try:
+            PMF_di[i,j] = PMF_di_dict[(index_i, index_j)]
+            PMF_di[j,i] = PMF_di_dict[(index_i, index_j)] # symetric
+        except(KeyError):
+            continue
+
+
 
 er_scores_ordered = {}
 for [pair, score] in ER_scores:
@@ -260,35 +426,35 @@ for site_pair, score in ER_scores[:25]:
     print(site_pair, score)
 
 plm_scores_ordered = {}
-for [pair, score] in plmdca_scores:
+for [pair, score] in PLM_di_data:
     plm_scores_ordered[pair] = score
-plmdca_scores = plm_scores_ordered
-plmdca_scores = sorted(plmdca_scores.items(), key =lambda k : k[1], reverse=True)
-for site_pair, score in plmdca_scores[:5]:
+PLM_scores = plm_scores_ordered
+PLM_scores = sorted(PLM_scores.items(), key =lambda k : k[1], reverse=True)
+for site_pair, score in PLM_scores[:5]:
     print(site_pair, score)
 
 mf_scores_ordered = {}
-for [pair, score] in mfdca_scores:
+for [pair, score] in PMF_di_data:
     mf_scores_ordered[pair] = score
-mfdca_scores = mf_scores_ordered
-mfdca_scores = sorted(mfdca_scores.items(), key =lambda k : k[1], reverse=True)
-for site_pair, score in mfdca_scores[:5]:
+PMF_scores = mf_scores_ordered
+PMF_scores = sorted(PMF_scores.items(), key =lambda k : k[1], reverse=True)
+for site_pair, score in PMF_scores[:5]:
     print(site_pair, score)
    
 
 print('Ref Seq will not match pdb seq because of data_processing but thats ok.')
-ld = 4
-contact_dist = 5.
+ld_thresh = 5.
+contact_dist = 10.
 plmdca_visualizer = contact_visualizer.DCAVisualizer('protein', pdb_chain, pdb_id,
     refseq_file = str(ref_outfile),
-    sorted_dca_scores = plmdca_scores,
+    sorted_dca_scores = PLM_di_data,
     linear_dist = ld,
     contact_dist = contact_dist
 )
 
 mfdca_visualizer = contact_visualizer.DCAVisualizer('protein', pdb_chain, pdb_id,
     refseq_file = str(ref_outfile),
-    sorted_dca_scores = mfdca_scores,
+    sorted_dca_scores = PMF_di_data,
     linear_dist = ld,
     contact_dist = contact_dist
 )
@@ -301,15 +467,121 @@ er_visualizer = contact_visualizer.DCAVisualizer('protein', pdb_chain, pdb_id,
 )
 
 
+ct_file = "%s%s_%s_ct.npy" % (pdb_dir, pdb_id, pfam_id)
+ct = np.load(ct_file)
 
-pydca_contact_plot(plmdca_visualizer, 'PLM', pdf_output, ld=4, contact_dist=5.)
-pydca_contact_plot(er_visualizer, 'ER', pdf_output, ld=4, contact_dist=5.)
-pydca_contact_plot(mfdca_visualizer, 'MF', pdf_output, ld=4, contact_dist=5.)
+# Set contact distance
+ct1 = ct.copy()
+ct_pos = ct < contact_dist
+ct1[ct_pos] = 1
+ct1[~ct_pos] = 0
+
+
+ld_thresh = 0.
+mask = np.triu(np.ones(ER_di.shape[0], dtype=bool), k=1)
+# argsort sorts from low to high. [::-1] reverses 
+er_order = ER_di[mask].argsort()[::-1]
+plm_order = PLM_di[mask].argsort()[::-1]
+pmf_order = PMF_di[mask].argsort()[::-1]
+
+linear_distance = np.zeros((len(s_index),len(s_index)))                                                                                                   
+for i, ii in enumerate(s_index):                                                                                                                          
+    for j, jj in enumerate(s_index):                                                                                                                      
+        linear_distance[i,j] = abs(ii - jj)   
+
+
+ld = linear_distance >= ld_thresh                                                                                                                         
+
+ER_ld_flat = ld[mask][er_order]          
+ER_di_flat = ER_di[mask][er_order]
+ER_ct_flat = ct1[mask][er_order]
+ER_dist_flat = ct[mask][er_order]
+
+PLM_ld_flat = ld[mask][plm_order]          
+PLM_di_flat = PLM_di[mask][plm_order]
+PLM_ct_flat = ct1[mask][plm_order]
+PLM_dist_flat = ct[mask][plm_order]
+
+PMF_ld_flat = ld[mask][pmf_order]          
+PMF_di_flat = PMF_di[mask][pmf_order]
+PMF_ct_flat = ct1[mask][pmf_order]
+PMF_dist_flat = ct[mask][pmf_order]
+
+pairs_matrix = np.empty((len(s_index),len(s_index)), dtype=object)                                                               
+for i, ii in enumerate(s_index):
+    for j, jj in enumerate(s_index):
+        pairs_matrix[i,j] =(i,j)
+print(pairs_matrix)
+print(pairs_matrix.shape)
+
+ER_pairs_flat = pairs_matrix[mask][er_order]
+PLM_pairs_flat = pairs_matrix[mask][plm_order]
+PMF_pairs_flat = pairs_matrix[mask][pmf_order]
+
+
+#pydca_contact_plot(plmdca_visualizer, 'PLM', pdf_output, ld=5, contact_dist=10.)
+#pydca_contact_plot(er_visualizer, 'ER', pdf_output, ld=5, contact_dist=10.)
+#pydca_contact_plot(mfdca_visualizer, 'MF', pdf_output, ld=5, contact_dist=10.)
+
+fig = plt.figure(figsize=(5,5.75))
+ax = plt.subplot2grid((1,1),(0,0))
+ax = plot_contact_map_ecc(ax, 'ER', ER_pairs_flat, ER_ct_flat, ER_dist_flat, ER_di_flat, contact_dist, ld_val=ld_thresh)
+
+ax.legend()
+plt.tight_layout()
+#plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+pdf_output.savefig( fig )
+
+
+fig = plt.figure(figsize=(5,5.75))
+ax = plt.subplot2grid((1,1),(0,0))
+ax = plot_contact_map_ecc(ax, 'MF', PMF_pairs_flat, PMF_ct_flat, PMF_dist_flat, PMF_di_flat, contact_dist, ld_val=ld_thresh)
+ax.legend()
+plt.tight_layout()
+#plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+pdf_output.savefig( fig )
+
+fig = plt.figure(figsize=(5,5.75))
+ax = plt.subplot2grid((1,1),(0,0))
+ax = plot_contact_map_ecc(ax, 'PLM', PLM_pairs_flat, PLM_ct_flat, PLM_dist_flat, PLM_di_flat, contact_dist, ld_val=ld_thresh)
+ax.legend()
+plt.tight_layout()
+#plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+pdf_output.savefig( fig )
+
+
+
+
+
 colors = ['b', 'r', 'g']
-pydca_tp_plot( [er_visualizer, mfdca_visualizer, plmdca_visualizer], [ 'ER', 'MF','PLM'],pdf_output, ld=4, contact_dist=5. )
-pydca_tp_plot( [plmdca_visualizer ],['PLM'],pdf_output, ld=4, contact_dist=5. )
-pydca_tp_plot( [ mfdca_visualizer], ['MF'],pdf_output, ld=4, contact_dist=5. )
-pydca_tp_plot( [er_visualizer],  [ 'ER'],pdf_output, ld=4, contact_dist=5. )
+#pydca_tp_plot( [er_visualizer, mfdca_visualizer, plmdca_visualizer], [ 'ER', 'MF','PLM'],pdf_output, ld=4, contact_dist=5. )
+#pydca_tp_plot( [plmdca_visualizer ],['PLM'],pdf_output, ld=5, contact_dist=10. )
+#pydca_tp_plot( [ mfdca_visualizer], ['MF'],pdf_output, ld=5, contact_dist=10. )
+#pydca_tp_plot( [er_visualizer],  [ 'ER'],pdf_output, ld=5, contact_dist=10. )
+ct_flats = [ct_flat, PLM_ct_flat, MF_ct_flat]
+tps = []
+for ct_f in ct_flats:
+    tp = np.cumsum(ct_f, dtype=float)
+    print(len(tp))
+#     if tp[-1] !=0:
+#         tp /= tp[-1]
+    tps.append(tp)
+methods = ['ER', 'MF', 'PLM']
+
+fig = plt.figure(figsize=(5,5.75))
+ax = plt.subplot2grid((1,1),(0,0))
+ax = plot_true_positive_rates_ecc([plmdca_visualizer ], tps, methods, contact_dist, ld_thresh, ax)
+ax.legend()
+plt.tight_layout()
+#plt.savefig('%s_%s_di_contact_%sv%s.pdf' % (pdb_id, pfam_id, labels[0],labels[1]) )
+pdf_output.savefig( fig )
+
+
+# We dont need individual TP rates...
+#plot_true_positive_rates_ecc([plmdca_visualizer ], [tps[0]], ['ER'], contact_dist, ld_thresh, ax)
+#plot_true_positive_rates_ecc([plmdca_visualizer ], [tps[0]], ['PLM'], contact_dist, ld_thresh, ax)
+#plot_true_positive_rates_ecc([plmdca_visualizer ], [tps[0]], ['MF'], contact_dist, ld_thresh, ax)
+
 
 # --- Plot DI vs Distance ER --- %
 # Define data directories
@@ -326,11 +598,6 @@ pdb_dir = '%s/protein_data/pdb_data/' % biowulf_dir
 ct_file = "%s%s_%s_ct.npy" % (pdb_dir, pdb_id, pfam_id)
 ct = np.load(ct_file)
 
-
-# load DI data
-ER_di = np.load("%s/%s_%s_ER_di.npy" % (out_dir, pdb_id, pfam_id))
-PMF_di_data = np.load("%s/%s_%s_PMF_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
-PLM_di_data = np.load("%s/%s_%s_PLM_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
 
 
 file_end = ".npy"
@@ -391,43 +658,6 @@ plt.tight_layout()
 # ax.legend()
 #plt.savefig('%s_%s_%s_di_dist.pdf' % (pdb_id, pfam_id, 'ER') )
 pdf_output.savefig( fig )
-
-# --- Compare Methods --- #
-PMF_di_data = np.load("%s/%s_%s_PMF_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
-PLM_di_data = np.load("%s/%s_%s_PLM_di.npy" % (out_dir, pdb_id, pfam_id),allow_pickle=True)
-
-
-# transform pydca DI dictionary to DI matrices.
-PLM_di = np.zeros(ER_di.shape)
-PLM_di_dict = {}
-for score_set in PLM_di_data:
-    PLM_di_dict[(score_set[0][0], score_set[0][1])] = score_set[1]
-for i, index_i in enumerate(s_index):
-    for j, index_j in enumerate(s_index):
-        if i==j:
-            PLM_di[i,j] = 1.
-            continue
-        try:
-            PLM_di[i,j] = PLM_di_dict[(index_i, index_j)]
-            PLM_di[j,i] = PLM_di_dict[(index_i, index_j)] # symetric
-        except(KeyError):
-            continue
-
-PMF_di = np.zeros(ER_di.shape)
-PMF_di_dict = {}
-for score_set in PMF_di_data:
-    PMF_di_dict[(score_set[0][0], score_set[0][1])] = score_set[1]
-for i, index_i in enumerate(s_index):
-    for j, index_j in enumerate(s_index):
-        if i==j:
-            PMF_di[i,j] = 1.
-            continue
-        try:
-            PMF_di[i,j] = PMF_di_dict[(index_i, index_j)]
-            PMF_di[j,i] = PMF_di_dict[(index_i, index_j)] # symetric
-        except(KeyError):
-            continue
-
 
 fp_file = "%s%s_%s_PLM_fp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
 tp_file = "%s%s_%s_PLM_tp%s" % (out_metric_dir, pdb_id, pfam_id, file_end)
