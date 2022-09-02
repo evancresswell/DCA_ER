@@ -1,3 +1,4 @@
 #!/bin/bash
 
-swarm -f single_protein_plots.swarm -g 50 --time=10:00 --partition norm --logdir swarm_output -b 20 # -b 100 #  quick # norm
+#swarm -f single_protein_plots.swarm -g 50 --time=45:00 --partition norm --logdir swarm_output # -b 100 #  quick # norm
+swarm -f manuscript_contact_examples.swarm -g 50 --time=45:00 --partition norm --logdir swarm_output # -b 100 #  quick # norm

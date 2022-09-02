@@ -1015,14 +1015,16 @@ def roc_curve_new(ct, di, ct_thres, s_index, ld_thresh=5, get_uniform=False):
     for i, ii in enumerate(s_index):
         for j, jj in enumerate(s_index):
             linear_distance[i,j] = abs(ii - jj)
-    ld = linear_distance >= ld_thresh
+    ld = linear_distance > ld_thresh
     ld_flat = ld[mask][order]
+    print(ld_flat[:15])
     #print(ld_flat)
     old_len = len(ct_flat)
+    print('ct_flat: ',ct_flat[:10])
     ct_flat = ct_flat[ld_flat]
     ct_pos_flat = ct[mask][order][ld_flat]
-    #print(ct_flat[:10])
-    #print(ld_flat[:10])
+    print('ld_flat: ',ld_flat[:10])
+    print('ct_flat (after ld constraint): ',ct_flat[:10])
     #print(ct_flat_ld[:10])
     #print('length of predictions before: %d and after: %d linear distance constraint' % (old_len, len(ct_flat)))
 
@@ -1060,10 +1062,17 @@ def roc_curve_new(ct, di, ct_thres, s_index, ld_thresh=5, get_uniform=False):
     
     # print("ct_flat dimensions: ", np.shape(ct_flat))
     # print(di[mask][order][:50])
-    # print(ct_flat[:50])
-    print(ct_flat)
-    fpr, tpr, thresholds = roc_scikit(ct_flat, di[mask][order][ld_flat])
-    roc_auc= auc(fpr, tpr)
+    # print(ct_flat[:50]
+    if np.sum(ct_flat) < 1.:
+        fpr = np.zeros(len(ct_flat))
+        tpr = np.zeros(len(ct_flat))
+        thresholds = 0.
+        roc_auc = 0
+        print('no tps')
+        pass
+    else:
+        fpr, tpr, thresholds = roc_scikit(ct_flat, di[mask][order][ld_flat])
+        roc_auc= auc(fpr, tpr)
     print('ct thresh %f gives auc = %f' % (ct_thres, roc_auc))
     if get_uniform:
         return fpr, tpr, thresholds, roc_auc, tpr_uni, fpr_uni, auc_uni, uni_bin, ct_pos_flat

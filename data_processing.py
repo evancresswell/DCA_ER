@@ -877,9 +877,11 @@ def data_processing_pdb2msa(data_path, pdb_df,gap_seqs=0.2, gap_cols=0.2, prob_l
     tpdb, alignment, s, pdb_s_index = get_tpdb_new(s, ali_start_indx, ali_end_indx, pfam_start_indx, pfam_end_indx, aligned_pdb_str) # requires prody.searchPfam DF from pdb2msa as input
 
     # added for new contact map function 6/5/2022 -- individual_method_comparison.ipynb
-    with open('%s/%s_%s_alignment.pickle' % (out_dir, pdb_id, pfam_id), 'wb') as f:
-        pickle.dump(alignment, f)
-    f.close()
+    # this doesent work in DCA_ER conda env... taking out 8/27/2022
+    if 0:
+        with open('%s/%s_%s_alignment.pickle' % (out_dir, pdb_id, pfam_id), 'wb') as f:
+            pickle.dump(alignment, f)
+        f.close()
 
     # follwoing no longer necessary with new version of get_tpdb..  get_tpdb_new does not retrun -1 AND get_tpdb_new trims ref sequence to correctly match aligned pdb sequence...
     if 0:

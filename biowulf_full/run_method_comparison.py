@@ -1,6 +1,6 @@
 import os.path, sys
 from scipy import stats
-from math import gcd
+from math import gcd, comb
 from collections import namedtuple
 import pickle
  
@@ -629,6 +629,31 @@ meff = ma_inv.sum()
 print("Number of residue positions:",n_var)
 print("Number of sequences:",n_seq)
 print('N_effective ', meff)
+
+# print the top 4 pairs for ER 
+pairs_matrix = np.empty((len(s_index),len(s_index)), dtype=object)                                                               
+for i, ii in enumerate(s_index):
+    for j, jj in enumerate(s_index):
+        pairs_matrix[i,j] =(i,j)
+
+ld_thresh=5
+linear_distance = np.zeros((len(s_index),len(s_index)))                                       
+for i, ii in enumerate(s_index):                                                              
+    for j, jj in enumerate(s_index):
+        linear_distance[i,j] = abs(ii - jj)   
+ld = linear_distance >= ld_thresh                                                                                                                         
+ 
+
+ER_ld_flat = ld[mask][order]          
+ER_pairs_flat = pairs_matrix[mask][order][ER_ld_flat]
+ER_di_compare_ld = ER_di_compare[ER_ld_flat]
+print('top 5 ER pairs: ', ER_pairs_flat[:5])
+print('top 5 ER pairs: ', ER_di_compare_ld[:5])
+
+Nc2 = comb(n_var,2)
+print(Nc2)
+d_crit = 1.949 * np.sqrt((2 * Nc2 ) / Nc2 ** 2)
+print('crititcal D value for KS statistic ', d_crit)
 
 
 # save relevant data for categorizing contact prediction metrics
