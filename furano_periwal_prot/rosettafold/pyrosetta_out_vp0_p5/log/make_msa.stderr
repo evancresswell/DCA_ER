@@ -1,0 +1,81 @@
+- 20:07:42.272 ERROR: Input file (rosettafold/vp0_perp/perp5.fasta) could not be opened!
+
+- 20:07:43.065 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.a3m
+
+- 20:07:43.065 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.id90cov75.a3m
+
+- 20:07:43.065 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:07:43.065 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.a3m'
+
+- 20:07:43.067 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.a3m
+
+- 20:07:43.067 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.id90cov50.a3m
+
+- 20:07:43.067 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:07:43.067 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.a3m'
+
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.id90cov75.a3m: No such file or directory
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.id90cov50.a3m: No such file or directory
+- 20:08:01.052 ERROR: Input file (/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-30.id90cov50.a3m) could not be opened!
+
+- 20:08:01.839 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.a3m
+
+- 20:08:01.839 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.id90cov75.a3m
+
+- 20:08:01.839 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:08:01.839 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.a3m'
+
+- 20:08:01.841 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.a3m
+
+- 20:08:01.841 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.id90cov50.a3m
+
+- 20:08:01.841 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:08:01.841 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.a3m'
+
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.id90cov75.a3m: No such file or directory
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.id90cov50.a3m: No such file or directory
+- 20:08:19.842 ERROR: Input file (/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-10.id90cov50.a3m) could not be opened!
+
+- 20:08:20.637 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.a3m
+
+- 20:08:20.637 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.id90cov75.a3m
+
+- 20:08:20.637 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:08:20.637 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.a3m'
+
+- 20:08:20.639 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.a3m
+
+- 20:08:20.639 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.id90cov50.a3m
+
+- 20:08:20.640 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:08:20.640 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.a3m'
+
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.id90cov75.a3m: No such file or directory
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.id90cov50.a3m: No such file or directory
+- 20:08:38.885 ERROR: Input file (/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-6.id90cov50.a3m) could not be opened!
+
+- 20:08:39.672 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.a3m
+
+- 20:08:39.672 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.id90cov75.a3m
+
+- 20:08:39.672 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:08:39.672 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.a3m'
+
+- 20:08:39.675 INFO: Input file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.a3m
+
+- 20:08:39.675 INFO: Output file = /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.id90cov50.a3m
+
+- 20:08:39.675 ERROR: In /usr/local/apps/RoseTTAFold/1.1.0/hh-suite/src/hhfilter.cpp:177: main:
+
+- 20:08:39.675 ERROR: 	could not open file '/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.a3m'
+
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.id90cov75.a3m: No such file or directory
+grep: /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.id90cov50.a3m: No such file or directory
+cp: cannot stat ‘/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp0_p5/hhblits/t000_.1e-3.id90cov50.a3m’: No such file or directory

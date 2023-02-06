@@ -1,0 +1,3 @@
+#! /bin/bash
+source /data/cresswellclayec/conda/etc/profile.d/conda.sh; conda activate DCA_ER; python run_Edist.py $SLURM_CPUS_PER_TASK 
+

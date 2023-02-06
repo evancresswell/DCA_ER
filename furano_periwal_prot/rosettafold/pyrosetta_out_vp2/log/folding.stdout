@@ -1,0 +1,870 @@
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_0_0.15.pdb', bb='', fastrelax=True, mode=0, nrestarts=3, pcut=0.15, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 507
+ - Distance restraints: 98
+ - Omega restraints: 83
+ - Theta restraints: 164
+ - Phi restraints:   162
+long
+Energy(iter=0): 99999.9 --> -27313.1 (accept)
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 507
+ - Distance restraints: 98
+ - Omega restraints: 83
+ - Theta restraints: 164
+ - Phi restraints:   162
+long
+Energy(iter=1): -27313.1 --> -27313.6 (accept)
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 507
+ - Distance restraints: 98
+ - Omega restraints: 83
+ - Theta restraints: 164
+ - Phi restraints:   162
+long
+Energy(iter=2): -27313.6 --> -27314.9 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_1_0.35.pdb', bb='', fastrelax=True, mode=1, nrestarts=3, pcut=0.35, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium
+Number of applied pair restraints: 5144
+ - Distance restraints: 870
+ - Omega restraints: 864
+ - Theta restraints: 1727
+ - Phi restraints:   1683
+long
+Energy(iter=0): 99999.9 --> -27150.7 (accept)
+short + medium
+Number of applied pair restraints: 5144
+ - Distance restraints: 870
+ - Omega restraints: 864
+ - Theta restraints: 1727
+ - Phi restraints:   1683
+long
+Energy(iter=1): -27150.7 --> -27150.7 (accept)
+short + medium
+Number of applied pair restraints: 5144
+ - Distance restraints: 870
+ - Omega restraints: 864
+ - Theta restraints: 1727
+ - Phi restraints:   1683
+long
+Energy(iter=2): -27150.7 --> -27150.6 (reject)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_1_0.25.pdb', bb='', fastrelax=True, mode=1, nrestarts=3, pcut=0.25, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium
+Number of applied pair restraints: 5190
+ - Distance restraints: 873
+ - Omega restraints: 865
+ - Theta restraints: 1729
+ - Phi restraints:   1723
+long
+Energy(iter=0): 99999.9 --> -27049.0 (accept)
+short + medium
+Number of applied pair restraints: 5190
+ - Distance restraints: 873
+ - Omega restraints: 865
+ - Theta restraints: 1729
+ - Phi restraints:   1723
+long
+Energy(iter=1): -27049.0 --> -27048.2 (reject)
+short + medium
+Number of applied pair restraints: 5190
+ - Distance restraints: 873
+ - Omega restraints: 865
+ - Theta restraints: 1729
+ - Phi restraints:   1723
+long
+Energy(iter=2): -27049.0 --> -27048.8 (reject)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_1_0.15.pdb', bb='', fastrelax=True, mode=1, nrestarts=3, pcut=0.15, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium
+Number of applied pair restraints: 5205
+ - Distance restraints: 881
+ - Omega restraints: 866
+ - Theta restraints: 1730
+ - Phi restraints:   1728
+long
+Energy(iter=0): 99999.9 --> -26651.0 (accept)
+short + medium
+Number of applied pair restraints: 5205
+ - Distance restraints: 881
+ - Omega restraints: 866
+ - Theta restraints: 1730
+ - Phi restraints:   1728
+long
+Energy(iter=1): -26651.0 --> -27039.3 (accept)
+short + medium
+Number of applied pair restraints: 5205
+ - Distance restraints: 881
+ - Omega restraints: 866
+ - Theta restraints: 1730
+ - Phi restraints:   1728
+long
+Energy(iter=2): -27039.3 --> -27039.7 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_0_0.35.pdb', bb='', fastrelax=True, mode=0, nrestarts=3, pcut=0.35, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short
+Number of applied pair restraints: 4697
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1565
+medium
+Number of applied pair restraints: 447
+ - Distance restraints: 87
+ - Omega restraints: 81
+ - Theta restraints: 161
+ - Phi restraints:   118
+long
+Energy(iter=0): 99999.9 --> -27127.4 (accept)
+short
+Number of applied pair restraints: 4697
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1565
+medium
+Number of applied pair restraints: 447
+ - Distance restraints: 87
+ - Omega restraints: 81
+ - Theta restraints: 161
+ - Phi restraints:   118
+long
+Energy(iter=1): -27127.4 --> -27148.3 (accept)
+short
+Number of applied pair restraints: 4697
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1565
+medium
+Number of applied pair restraints: 447
+ - Distance restraints: 87
+ - Omega restraints: 81
+ - Theta restraints: 161
+ - Phi restraints:   118
+long
+Energy(iter=2): -27148.3 --> -27148.4 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_1_0.45.pdb', bb='', fastrelax=True, mode=1, nrestarts=3, pcut=0.45, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium
+Number of applied pair restraints: 3424
+ - Distance restraints: 870
+ - Omega restraints: 854
+ - Theta restraints: 1700
+ - Phi restraints:   0
+long
+Energy(iter=0): 99999.9 --> -17166.1 (accept)
+short + medium
+Number of applied pair restraints: 3424
+ - Distance restraints: 870
+ - Omega restraints: 854
+ - Theta restraints: 1700
+ - Phi restraints:   0
+long
+Energy(iter=1): -17166.1 --> -17778.9 (accept)
+short + medium
+Number of applied pair restraints: 3424
+ - Distance restraints: 870
+ - Omega restraints: 854
+ - Theta restraints: 1700
+ - Phi restraints:   0
+long
+Energy(iter=2): -17778.9 --> -17783.4 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_0_0.45.pdb', bb='', fastrelax=True, mode=0, nrestarts=3, pcut=0.45, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short
+Number of applied pair restraints: 3132
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   0
+medium
+Number of applied pair restraints: 292
+ - Distance restraints: 87
+ - Omega restraints: 71
+ - Theta restraints: 134
+ - Phi restraints:   0
+long
+Energy(iter=0): 99999.9 --> -19279.7 (accept)
+short
+Number of applied pair restraints: 3132
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   0
+medium
+Number of applied pair restraints: 292
+ - Distance restraints: 87
+ - Omega restraints: 71
+ - Theta restraints: 134
+ - Phi restraints:   0
+long
+Energy(iter=1): -19279.7 --> -19335.8 (accept)
+short
+Number of applied pair restraints: 3132
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   0
+medium
+Number of applied pair restraints: 292
+ - Distance restraints: 87
+ - Omega restraints: 71
+ - Theta restraints: 134
+ - Phi restraints:   0
+long
+Energy(iter=2): -19335.8 --> -19335.8 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_0_0.25.pdb', bb='', fastrelax=True, mode=0, nrestarts=3, pcut=0.25, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 492
+ - Distance restraints: 90
+ - Omega restraints: 82
+ - Theta restraints: 163
+ - Phi restraints:   157
+long
+Energy(iter=0): 99999.9 --> -26474.7 (accept)
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 492
+ - Distance restraints: 90
+ - Omega restraints: 82
+ - Theta restraints: 163
+ - Phi restraints:   157
+long
+Energy(iter=1): -26474.7 --> -26824.3 (accept)
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 492
+ - Distance restraints: 90
+ - Omega restraints: 82
+ - Theta restraints: 163
+ - Phi restraints:   157
+long
+Energy(iter=2): -26824.3 --> -26823.8 (reject)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_1_0.05.pdb', bb='', fastrelax=True, mode=1, nrestarts=3, pcut=0.05, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium
+Number of applied pair restraints: 5271
+ - Distance restraints: 938
+ - Omega restraints: 868
+ - Theta restraints: 1734
+ - Phi restraints:   1731
+long
+Energy(iter=0): 99999.9 --> -25297.9 (accept)
+short + medium
+Number of applied pair restraints: 5271
+ - Distance restraints: 938
+ - Omega restraints: 868
+ - Theta restraints: 1734
+ - Phi restraints:   1731
+long
+Energy(iter=1): -25297.9 --> -26291.8 (accept)
+short + medium
+Number of applied pair restraints: 5271
+ - Distance restraints: 938
+ - Omega restraints: 868
+ - Theta restraints: 1734
+ - Phi restraints:   1731
+long
+Energy(iter=2): -26291.8 --> -26294.3 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_0_0.05.pdb', bb='', fastrelax=True, mode=0, nrestarts=3, pcut=0.05, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 573
+ - Distance restraints: 155
+ - Omega restraints: 85
+ - Theta restraints: 168
+ - Phi restraints:   165
+long
+Energy(iter=0): 99999.9 --> -24765.5 (accept)
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 573
+ - Distance restraints: 155
+ - Omega restraints: 85
+ - Theta restraints: 168
+ - Phi restraints:   165
+long
+Energy(iter=1): -24765.5 --> -26706.2 (accept)
+short
+Number of applied pair restraints: 4698
+ - Distance restraints: 783
+ - Omega restraints: 783
+ - Theta restraints: 1566
+ - Phi restraints:   1566
+medium
+Number of applied pair restraints: 573
+ - Distance restraints: 155
+ - Omega restraints: 85
+ - Theta restraints: 168
+ - Phi restraints:   165
+long
+Energy(iter=2): -26706.2 --> -26706.4 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_2_0.05.pdb', bb='', fastrelax=True, mode=2, nrestarts=3, pcut=0.05, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium + long
+Number of applied pair restraints: 5271
+ - Distance restraints: 938
+ - Omega restraints: 868
+ - Theta restraints: 1734
+ - Phi restraints:   1731
+Energy(iter=0): 99999.9 --> -26741.7 (accept)
+short + medium + long
+Number of applied pair restraints: 5271
+ - Distance restraints: 938
+ - Omega restraints: 868
+ - Theta restraints: 1734
+ - Phi restraints:   1731
+Energy(iter=1): -26741.7 --> -26854.8 (accept)
+short + medium + long
+Number of applied pair restraints: 5271
+ - Distance restraints: 938
+ - Omega restraints: 868
+ - Theta restraints: 1734
+ - Phi restraints:   1731
+Energy(iter=2): -26854.8 --> -26927.5 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_2_0.25.pdb', bb='', fastrelax=True, mode=2, nrestarts=3, pcut=0.25, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium + long
+Number of applied pair restraints: 5190
+ - Distance restraints: 873
+ - Omega restraints: 865
+ - Theta restraints: 1729
+ - Phi restraints:   1723
+Energy(iter=0): 99999.9 --> -25660.8 (accept)
+short + medium + long
+Number of applied pair restraints: 5190
+ - Distance restraints: 873
+ - Omega restraints: 865
+ - Theta restraints: 1729
+ - Phi restraints:   1723
+Energy(iter=1): -25660.8 --> -26167.0 (accept)
+short + medium + long
+Number of applied pair restraints: 5190
+ - Distance restraints: 873
+ - Omega restraints: 865
+ - Theta restraints: 1729
+ - Phi restraints:   1723
+Energy(iter=2): -26167.0 --> -26718.6 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_2_0.15.pdb', bb='', fastrelax=True, mode=2, nrestarts=3, pcut=0.15, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium + long
+Number of applied pair restraints: 5205
+ - Distance restraints: 881
+ - Omega restraints: 866
+ - Theta restraints: 1730
+ - Phi restraints:   1728
+Energy(iter=0): 99999.9 --> -25949.6 (accept)
+short + medium + long
+Number of applied pair restraints: 5205
+ - Distance restraints: 881
+ - Omega restraints: 866
+ - Theta restraints: 1730
+ - Phi restraints:   1728
+Energy(iter=1): -25949.6 --> -26272.5 (accept)
+short + medium + long
+Number of applied pair restraints: 5205
+ - Distance restraints: 881
+ - Omega restraints: 866
+ - Theta restraints: 1730
+ - Phi restraints:   1728
+Energy(iter=2): -26272.5 --> -26311.7 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_2_0.35.pdb', bb='', fastrelax=True, mode=2, nrestarts=3, pcut=0.35, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium + long
+Number of applied pair restraints: 5144
+ - Distance restraints: 870
+ - Omega restraints: 864
+ - Theta restraints: 1727
+ - Phi restraints:   1683
+Energy(iter=0): 99999.9 --> -27130.2 (accept)
+short + medium + long
+Number of applied pair restraints: 5144
+ - Distance restraints: 870
+ - Omega restraints: 864
+ - Theta restraints: 1727
+ - Phi restraints:   1683
+Energy(iter=1): -27130.2 --> -27135.8 (accept)
+short + medium + long
+Number of applied pair restraints: 5144
+ - Distance restraints: 870
+ - Omega restraints: 864
+ - Theta restraints: 1727
+ - Phi restraints:   1683
+Energy(iter=2): -27135.8 --> -27145.7 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95
+Namespace(FASTA='vp2.fasta', NPZ='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/t000_.3track.npz', OUT='/gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp2/pdb-3track/model0_2_0.45.pdb', bb='', fastrelax=True, mode=2, nrestarts=3, pcut=0.45, roll=True, save_chk=False, sg='7,3', steps=1000, use_orient=True)
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+Apply circular shift...
+Savitzky-Golay:     7,3
+dist restraints:    1123
+omega restraints:   1053
+theta restraints:   2104
+phi restraints:     2101
+mutation: G11A
+mutation: G75A
+setting random (phi,psi,omega)...
+short + medium + long
+Number of applied pair restraints: 3424
+ - Distance restraints: 870
+ - Omega restraints: 854
+ - Theta restraints: 1700
+ - Phi restraints:   0
+Energy(iter=0): 99999.9 --> -16444.2 (accept)
+short + medium + long
+Number of applied pair restraints: 3424
+ - Distance restraints: 870
+ - Omega restraints: 854
+ - Theta restraints: 1700
+ - Phi restraints:   0
+Energy(iter=1): -16444.2 --> -16640.5 (accept)
+short + medium + long
+Number of applied pair restraints: 3424
+ - Distance restraints: 870
+ - Omega restraints: 854
+ - Theta restraints: 1700
+ - Phi restraints:   0
+Energy(iter=2): -16640.5 --> -16644.8 (accept)
+mutation: A11G
+mutation: A75G
+2.0
+1.0
+idealize...
+relax: First round... (focused on torsion space relaxation)
+Number of applied pair restraints: 4977
+ - Distance restraints: 843
+ - Omega restraints: 828
+ - Theta restraints: 1654
+ - Phi restraints:   1652
+1.0
+0.5
+relax: Second round... (cartesian space)
+Number of applied pair restraints: 426
+ - Distance restraints: 426
+Number of applied coordinate restraints: 95

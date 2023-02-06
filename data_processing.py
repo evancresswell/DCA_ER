@@ -822,6 +822,205 @@ def load_msa(data_path, pfam_id):
         return
     return s
 
+# =========================================================================================
+# process data without given pdb structure or pfam_id
+def data_processing_experiment(s, pfam_id, tpdb=0, gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, conserved_cols_thresh=0.8, printing=True, out_dir='./', letter_format=False, remove_cols=True):
+    # def data_processing(data_path,pfam_id,ipdb=0,gap_seqs=0.2,gap_cols=0.2,prob_low=0.004):
+    # read parse_pfam data:
+    # print('read original aligned pfam data')
+    # s = np.load('../%s/msa.npy'%pfam_id).T
+
+    np.random.seed(123456789)
+
+    orig_seq_len = s.shape[1]
+    print('Original Sequence length: ', orig_seq_len)
+
+
+    if printing:
+        print('tpdb (s_ipdb) is : ', tpdb)
+
+    if printing:
+        print("#\n\n-------------------------Remove Gaps--------------------------#")
+        print('Shape of s is : ', s.shape)
+        print("s = \n", s)
+
+
+    gap_pdb = s[tpdb] == '-'   # returns True/False for gaps/no gaps
+    # print("removing gaps...")
+    print(s[0])
+    print(s[-1])
+    s = s[:, ~gap_pdb]  # removes gaps
+    print(s.shape)
+
+
+    # print('shape of s without reference sequence gaps: ', s.shape)
+    s_index = np.arange(s.shape[1])
+
+    if printing:
+        print("s[tpdb] shape is ", s[tpdb].shape)
+        print("s = \n", s)
+        print("though s still has gaps, s[%d] does not:\n" % (tpdb), s[tpdb])
+        print("s shape is ", s.shape)
+        print("Saving indices of reference sequence s[%d](length=%d):\n" % (tpdb, s_index.shape[0]), s_index)
+        print("#--------------------------------------------------------------#\n\n")
+
+    lower_cols = np.array([i for i in range(s.shape[1]) if s[tpdb, i].islower()])
+    if printing:
+        print("removing non aligned (lower case) columns in subject sequence:\n ", lower_cols, '\n')
+    # lower case removal reference: https://onlinelibrary.wiley.com/doi/full/10.1002/1097-0134%2820001101%2941%3A2%3C224%3A%3AAID-PROT70%3E3.0.CO%3B2-Z
+
+    # --- remove duplicates before processing (as done in pydca) --- #
+    if 0:
+        dup_rows = []
+        s_no_dup = []
+        for i, row in enumerate(s):
+            if [a for a in row] in s_no_dup:
+                if i != tpdb: 	# do not want to remove reference sequence
+                    dup_rows.append(i)
+                    print('found duplicate, row %d' % i)
+                else:    	# we need to add the reference sequence back in even if its a duplicate row.	
+                    s_no_dup.append([a for a in row])
+             
+            else:
+                s_no_dup.append([a for a in row])
+        np.save('%s_dup.npy' % pfam_id ,dup_rows)
+        if printing:
+            print('found %d duplicates! (Removing...)' % len(dup_rows))
+        s, tpdb = remove_seqs_list(s, tpdb, dup_rows)
+    else:
+        unique_seqs = np.unique(s,axis=0, return_index=True)
+        if tpdb not in unique_seqs[1]:
+            s_new = np.insert(unique_seqs[0],0,s[tpdb],axis=0)
+            print(s[0])
+            print(s_new[0])
+            s = s_new
+        else:
+            new_indx = np.where(unique_seqs[1] == tpdb)
+            print('new ipdb at: ', new_indx)
+            print(s[new_indx])
+            tpdb = new_indx
+            s = unique_seqs[0]
+            
+
+        print(s[tpdb])
+        print('indices of unique sequences: ', unique_seqs[1])
+    # -------------------------------------------------------------- #
+
+
+
+    # - Removing bad sequences (>gap_seqs gaps) -------------------- #
+    if printing:
+        print(s.shape)
+        print("In Data Processing Reference Sequence (shape=", s[tpdb].shape, "): \n", s[tpdb])
+    # print('remove sequences containing too many gaps')
+    s, tpdb = remove_bad_seqs(s, tpdb, gap_seqs)  # removes all sequences (rows) with >gap_seqs gap %
+    if printing:
+        print('\nAfter removing bad sequences...\ntpdb (s_ipdb) is : ', tpdb)
+        print(s.shape)
+    # -------------------------------------------------------------- #
+
+
+
+    bad_cols = find_bad_cols(s, gap_cols)
+    if printing:
+        print('found bad columns :=', bad_cols)
+
+    if 1: # replace aa with potential correct aa
+        # 2018.12.24:
+        # replace 'Z' by 'Q' or 'E' with prob
+        # print('replace Z by Q or E')
+        s = find_and_replace(s, 'Z', np.array(['Q', 'E']))
+
+        # replace 'B' by Asparagine (N) or Aspartic (D)
+        # print('replace B by N or D')
+        s = find_and_replace(s, 'B', np.array(['N', 'D']))
+        s = find_and_replace(s, '~', np.array(['-']))
+        s = find_and_replace(s, '_', np.array(['-']))
+
+        # replace 'X' as amino acids with prob
+        # print('replace X by other aminoacids')
+        amino_acids = np.array(['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', \
+                                'T', 'V', 'W', 'Y', 'U'])
+        s = find_and_replace(s, 'X', amino_acids)
+    else: # replace aa with gap '-' (like in pydca)
+        if printing:
+            print('\n\nUsing PYDCA\'s method of replacing Z, B, and X with - instead of likely alternates...\n\n')
+        s = find_and_replace(s, 'Z', np.array(['-']))
+        s = find_and_replace(s, 'B', np.array(['-']))
+        s = find_and_replace(s, 'X', np.array(['-']))
+
+    # remove conserved cols
+    conserved_cols = find_conserved_cols(s, fc=conserved_cols_thresh)
+    if printing:
+        print("found conserved columns (%f repetition):\n" % conserved_cols_thresh, conserved_cols)
+
+    # print(s.shape)
+    # print('number of conserved columns removed:',conserved_cols.shape[0])
+
+    removed_cols = np.array(list(set(bad_cols) | set(conserved_cols)))
+
+    removed_cols = np.array(list(set(removed_cols) | set(lower_cols)))
+    if printing:
+        print("We remove conserved and bad columns with, at the following indices (len %d):\n" % len(removed_cols), removed_cols)
+
+
+    # info still pased through removed_cols but this way we can interact with full msa if remove_cols is False
+    if remove_cols:
+        s = np.delete(s, removed_cols, axis=1)
+        s_index = np.delete(s_index, removed_cols)
+
+    if printing:
+        print("Removed Columns...")
+        print("s now has shape: ", s.shape)
+        print("s_index (length=%d) = \n" % s_index.shape[0], s_index)
+
+    # print('replace gap(-) by other aminoacids')
+    # s = find_and_replace(s,'-',amino_acids)
+
+    if printing:
+        print("In Data Processing Reference Sequence (shape=", s[tpdb].shape, "): \n", s[tpdb])
+
+    # Convert S to number format (number representation of amino acids)
+    if not letter_format:
+        # convert letter to number:
+        s = convert_letter2number(s)
+
+    # print(s.shape)
+    # replace lower probs by higher probs 
+    # print('replace lower probs by higher probs')
+    for i in range(s.shape[1]):
+        s[:, i] = replace_lower_by_higher_prob(s[:, i], prob_low)
+
+    # print("s[tpdb] (shape=",s[tpdb].shape,"):\n",s[tpdb])
+    # min_res = min_res(s)
+    # print(min_res)
+
+    # remove_cols = np.hstack([gap_cols,conserved_cols])
+    # remove_cols = np.hstack([remove_cols,lower_cols]) ## 2019.01.22
+
+    # np.savetxt('s0.txt',s,fmt='%i')
+    # np.savetxt('cols_remove.txt',remove_cols,fmt='%i')
+
+    # f = open('n_pos.txt','w')
+    # f.write('%i'%(s.shape[1]))
+    # f.close()
+
+    # mi = number_residues(s)
+    # print(mi.mean())
+    np.save("%s/%s_removed_cols.npy" % (out_dir, pfam_id), removed_cols)
+
+    # - Removing bad sequences (>gap_seqs gaps) -------------------- #
+    if printing:
+        print(s.shape)
+        print("In Data Processing Final Reference Sequence (shape=", s[tpdb].shape, "): \n", convert_number2letter(s[tpdb]))
+
+    return s, removed_cols, s_index, tpdb, orig_seq_len
+
+
+# =========================================================================================
+
+
+
 
 def data_processing_pdb2msa(data_path, pdb_df,gap_seqs=0.2, gap_cols=0.2, prob_low=0.004, 
                         conserved_cols=0.8, printing=True, out_dir='./', pdb_dir='./', letter_format=False, 

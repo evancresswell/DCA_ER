@@ -6,7 +6,15 @@ from sklearn.preprocessing import OneHotEncoder
 def frequency(s0,q,i1i2,theta=0.2,pseudo_weight=0.5):
     n = s0.shape[1]
     # hamming distance
-    dst = distance.squareform(distance.pdist(s0, 'hamming'))
+    try:
+        dst = distance.squareform(distance.pdist(s0, 'hamming'))
+    except(ValueError):
+        dst = np.zeros((len(s0),len(s0)))
+        for i in range(len(s0)):
+            for j in range(len(s0)):
+                dst[i,j] = distance.hamming(s0[i],s0[j])
+        dst = dst + np.transpose(dst)
+
     ma_inv = 1/(1+(dst < theta).sum(axis=1).astype(float))
     meff = ma_inv.sum() 
 

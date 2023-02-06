@@ -1,0 +1,2 @@
+#!/bin/bash
+sbatch --mem=300g --time=12:00:00 --partition=norm --cpus-per-task=40 run_edist.sh

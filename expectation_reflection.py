@@ -14,6 +14,8 @@ def fit(x,y_onehot,niter_max,l2,couplings= None):
     x_av = np.mean(x,axis=0)
     dx = x - x_av
     c = np.cov(dx,rowvar=False,bias=True)
+    if not np.allclose(c, c.T, rtol=1e-05, atol=1e-08):
+        print('sample covariance matrix is not symmetric!!')
 
     # 2019.07.16:  l2 = lamda/(2L)
     c += l2*np.identity(n)/(2*l)
@@ -33,6 +35,8 @@ def fit(x,y_onehot,niter_max,l2,couplings= None):
             w = couplings[:,i]
         else: 
             w = np.random.normal(0.0,1./np.sqrt(n),size=(n))
+            
+
         #print("w shape: ",w.shape)
         #print("w shape: ",w.shape)
         #w_couplings = er_tools.slice_couplings(couplings=couplings, site_pair= )

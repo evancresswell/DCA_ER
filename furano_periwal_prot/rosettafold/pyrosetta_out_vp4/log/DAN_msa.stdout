@@ -1,0 +1,18 @@
+PyRosetta-4 2021 [Rosetta PyRosetta4.Release.python37.linux 2021.27+release.7ce64884a77d606b7b667c363527acc846541030 2021-07-09T18:10:05] retrieved from: http://www.pyrosetta.org
+(C) Copyright Rosetta Commons Member Institutions. Created in JHU by Sergey Lyskov and PyRosetta Team.
+/usr/local/apps/RoseTTAFold/1.1.0//DAN-msa/models/smTr
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_2_0.15.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_0_0.45.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_0_0.25.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_1_0.15.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_1_0.35.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_2_0.05.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_1_0.05.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_1_0.45.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_2_0.45.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_1_0.25.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_2_0.35.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_0_0.15.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_2_0.25.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_0_0.35.features.npz: 'ORN'
+While processing /gpfs/gsfs8/users/cresswellclayec/DCA_ER/furano_periwal_prot/rosettafold/pyrosetta_out_vp4/pdb-3track/model0_0_0.05.features.npz: 'ORN'

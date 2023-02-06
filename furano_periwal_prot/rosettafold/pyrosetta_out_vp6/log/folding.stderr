@@ -1,0 +1,255 @@
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+
+
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+ERROR:: Exit from: /home/benchmark/rosetta/source/src/core/pose/Pose.cc line: 1066
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 340, in <module>
+    main()
+  File "/usr/local/apps/RoseTTAFold/1.1.0//folding/RosettaTR.py", line 92, in main
+    set_random_dihedral(pose0)
+  File "/usr/local/apps/RoseTTAFold/1.1.0/folding/utils.py", line 234, in set_random_dihedral
+    pose.set_phi(i,phi)
+RuntimeError: 
+
+File: /home/benchmark/rosetta/source/src/core/pose/Pose.cc:1066
+[ ERROR ] UtilityExitException
+ERROR: Pose::set_phi( Size const seqpos , Real const setting ): residue seqpos is not part of a protein, peptoid, or carbohydrate!
+
+

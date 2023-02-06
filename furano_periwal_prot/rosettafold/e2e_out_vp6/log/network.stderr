@@ -1,0 +1,9 @@
+Using backend: pytorch
+Traceback (most recent call last):
+  File "/home/cresswellclayec/network/predict_e2e.py", line 324, in <module>
+    pred.predict(args.a3m_fn, args.out_prefix, args.hhr, args.atab)
+  File "/home/cresswellclayec/network/predict_e2e.py", line 227, in predict
+    self.write_pdb(seq[0], xyz[0], idx_pdb[0], Bfacts=lddt[0], prefix="%s_init"%(out_prefix))
+  File "/home/cresswellclayec/network/predict_e2e.py", line 281, in write_pdb
+    "ATOM", ctr, atm_j, util.num2aa[s], 
+IndexError: list index out of range

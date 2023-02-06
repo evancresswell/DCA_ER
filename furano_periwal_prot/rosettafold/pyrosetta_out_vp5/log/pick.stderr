@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/usr/local/apps/RoseTTAFold/1.1.0//DAN-msa/pick_final_models.div.py", line 113, in <module>
+    pool = mp.Pool(n_core_pool)
+  File "/usr/local/apps/RoseTTAFold/conda/envs/folding/lib/python3.7/multiprocessing/context.py", line 119, in Pool
+    context=self.get_context())
+  File "/usr/local/apps/RoseTTAFold/conda/envs/folding/lib/python3.7/multiprocessing/pool.py", line 169, in __init__
+    raise ValueError("Number of processes must be at least 1")
+ValueError: Number of processes must be at least 1
